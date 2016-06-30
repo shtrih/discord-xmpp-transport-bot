@@ -1,0 +1,12 @@
+{
+    "discord": {
+        "token": "",
+        "channelId": ""
+    },
+    "jabber": {
+        "roomJid": "conf@conference.jabber.ru",
+        "roomNick": "Yuki",
+        "userJid": "user@jabber.ru",
+        "userPass": "pass"
+    }
+}

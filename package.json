@@ -1,0 +1,16 @@
+{
+  "name": "discord-jabber-transport-bot",
+  "version": "1.0.0",
+  "description": "Simple transport bot between Discord channel and Jabber conference",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "shtrih",
+  "license": "MIT",
+  "dependencies": {
+    "discord.io": "^1.12.0",
+    "json-config": "0.0.1",
+    "node-xmpp-client": "^3.0.1"
+  }
+}
