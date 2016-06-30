@@ -124,8 +124,10 @@ jabber.on('stanza', function (stanza) {
         from_nick = stanza.attrs.from.split('/', 2)[1]
     ;
 
-    discord.sendMessage({
-        to: Config.discord.channelId,
-        message: '>' + from_nick + ': ' + message
-    });
+    if (!message.match(/^>.+:/)) {
+        discord.sendMessage({
+            to: Config.discord.channelId,
+            message: '>' + from_nick + ': ' + message
+        });
+    }
 });
