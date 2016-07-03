@@ -10,6 +10,8 @@ var Discord = require('discord.io'),
     Xmpp = require('node-xmpp-client'),
     debug = require('debug'),
     PrintDebug = debug('debug'),
+    PrintDebugJabber = debug('debug:jabber'),
+    PrintDebugDiscord = debug('debug:discord'),
     PrintInfo = debug('info'),
     PrintError = debug('error'),
     Config = require('json-config')
@@ -50,10 +52,13 @@ function App() {
 
         discord.on('ready', function () {
             PrintInfo('Connected to discord as ' + discord.username + " - (" + discord.id + ")");
+
+            // debug all discord.io events
+            discord.on('debug', PrintDebugDiscord);
         });
 
         discord.on('message', function (fromNickname, userID, channelID, message, event) {
-            PrintDebug('jabber_connected_users', jabber_connected_users);
+//            PrintDebug('jabber_connected_users', jabber_connected_users);
             if ("ping" === message) {
                 discord.sendMessage({
                     to: channelID,
@@ -67,12 +72,12 @@ function App() {
                         message: 'Участники: ' + Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', ')
                     });
             }
-            else if (userID != discord.id) {
+            else if (userID != discord.id && jid_by_channel[channelID]) {
                 // https://discordapp.com/developers/docs/resources/channel#message-formatting
                 message = discord.fixMessage(message);
 
                 jabber.send(
-                    Xmpp.createStanza('message', {to: jid_by_channel[channelID], type: 'groupchat'}, new Xmpp.Element('body').t('>*' + fromNickname + '*: ' + message))
+                    Xmpp.createStanza('message', {to: jid_by_channel[channelID], type: 'groupchat'}, new Xmpp.Element('body').t('от ' + fromNickname + ': ' + message))
                 );
             }
         });
@@ -100,11 +105,11 @@ function App() {
         });
 
         jabber.on('connection', function () {
-            PrintDebug('Jabber online');
+            PrintInfo('Jabber online');
         });
 
         jabber.on('stanza', function (stanza) {
-            PrintDebug('Incoming stanza: ', stanza.toString());
+            PrintDebugJabber('Incoming stanza: ', stanza.toString());
 
             var from = stanza.from.split('/', 2),
                 from_jid = from[0],
@@ -171,7 +176,7 @@ function App() {
                         var subject = stanza.getChild('subject');
                         if (subject) {
                             var topic = (body ? body : subject).getText();
-                            PrintDebug('Try to set discord topic: ', topic);
+                            PrintDebugJabber('Try to set discord topic: ', topic);
                             discord.editChannelInfo({
                                 channel: channel,
                                 topic: topic + '\n ~ ' + from_jid
