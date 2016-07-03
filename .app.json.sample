@@ -4,9 +4,19 @@
         "channelId": ""
     },
     "jabber": {
-        "roomJid": "conf@conference.jabber.ru",
-        "roomNick": "Yuki",
-        "userJid": "user@jabber.ru",
+        "userJid": "user@jabber.org",
         "userPass": "pass"
     }
+    "roomList": [
+        {
+            "nick": "Yuki",
+            "roomChannelId": "000000000000000000",
+            "roomJid": "some-conf@conference.jabber.org"
+        },
+        {
+            "nick": "Yuki",
+            "roomChannelId": "000000000000000000",
+            "roomJid": "another-conf@conference.jabber.org"
+        }
+    ]
 }
