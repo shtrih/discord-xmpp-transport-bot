@@ -9,6 +9,7 @@
   "author": "shtrih",
   "license": "MIT",
   "dependencies": {
+    "debug": "^2.2.0",
     "discord.io": "^1.12.0",
     "json-config": "0.0.1",
     "node-xmpp-client": "^3.0.1"

@@ -6,10 +6,14 @@
  See also: https://gist.github.com/powdahound/940969
  */
 
-var Discord = require('discord.io');
-var Xmpp = require('node-xmpp-client');
-var Util = require('util');
-var Config = require('json-config');
+var Discord = require('discord.io'),
+    Xmpp = require('node-xmpp-client'),
+    debug = require('debug'),
+    PrintDebug = debug('debug'),
+    PrintInfo = debug('info'),
+    PrintError = debug('error'),
+    Config = require('json-config')
+;
 
 /*
 var stanza = Xmpp.createStanza('message', {from: 'test', to: 'asda', type: 'asd'}, new Xmpp.Element('body').t('>asdasdas'));
@@ -36,8 +40,8 @@ function App() {
 
     this.run = function () {
         discord = new Discord.Client({
-                token: config.discord.token,
-                autorun: true
+            token: config.discord.token,
+            autorun: true
         });
         jabber = new Xmpp.Client({
             jid: config.jabber.userJid,
@@ -45,13 +49,11 @@ function App() {
         });
 
         discord.on('ready', function () {
-            Util.log('Connected to discord as ' + discord.username + " - (" + discord.id + ")");
-
-
+            PrintInfo('Connected to discord as ' + discord.username + " - (" + discord.id + ")");
         });
 
         discord.on('message', function (fromNickname, userID, channelID, message, event) {
-            Util.log(jabber_connected_users, jid_by_channel);
+            PrintDebug('jabber_connected_users', jabber_connected_users);
             if ("ping" === message) {
                 discord.sendMessage({
                     to: channelID,
@@ -76,7 +78,7 @@ function App() {
         });
 
         jabber.on('online', function () {
-            Util.log('Connected to jabber as ' + config.jabber.userJid);
+            PrintInfo('Connected to jabber as ' + config.jabber.userJid);
 
             // set ourselves as online
             /*jabber.send(new xmpp.Element('presence', { type: 'available' }).
@@ -84,6 +86,7 @@ function App() {
              );*/
 
             for (var i = 0 ; i < config.roomList.length; i++) {
+                PrintInfo('Connecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
                 self.join(config.roomList[i].roomJid, config.roomList[i].nick);
 
                 jid_by_channel[ config.roomList[i].roomChannelId ] = config.roomList[i].roomJid;
@@ -93,15 +96,15 @@ function App() {
         });
 
         jabber.on('error', function (e) {
-            Util.log(e);
+            PrintError(e);
         });
 
         jabber.on('connection', function () {
-            Util.log('online');
+            PrintDebug('Jabber online');
         });
 
         jabber.on('stanza', function (stanza) {
-            Util.log('Incoming stanza: ', stanza.toString());
+            PrintDebug('Incoming stanza: ', stanza.toString());
 
             var from = stanza.from.split('/', 2),
                 from_jid = from[0],
@@ -112,7 +115,7 @@ function App() {
             ;
 
             if ('error' == stanza.type) {
-                Util.log('[error] ' + stanza);
+                PrintError('[Stanza error] ' + stanza);
                 return;
             }
 
@@ -168,7 +171,7 @@ function App() {
                         var subject = stanza.getChild('subject');
                         if (subject) {
                             var topic = (body ? body : subject).getText();
-                            Util.log('Try to set discord topic: ', topic);
+                            PrintDebug('Try to set discord topic: ', topic);
                             discord.editChannelInfo({
                                 channel: channel,
                                 topic: topic + '\n ~ ' + from_jid
@@ -180,7 +183,7 @@ function App() {
                         message = body.getText();
                     }
                     else if ('chat' === stanza.type) {
-                        //
+                        // direct messages
                     }
                 }
                 break;
