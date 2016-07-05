@@ -4,6 +4,7 @@
   "description": "Simple transport bot between Discord channel and Jabber conference",
   "main": "app.js",
   "scripts": {
+    "start": "DEBUG=info,error node app.js > ../logs/app.log",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "shtrih",
