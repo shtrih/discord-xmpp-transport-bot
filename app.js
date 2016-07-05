@@ -36,8 +36,7 @@ function App() {
         discord,
         jabber,
         config = Config({
-            config_dir: "./",
-            default_env: ".app"
+            config_dir: "./"
         }),
         jid_by_channel = {},
         channel_by_jid = {},
@@ -45,7 +44,7 @@ function App() {
         jabber_connected_users = {}
     ;
 
-    this.run = function () {
+    self.run = function () {
         discord = new Discord.Client({
             token: config.discord.token,
             autorun: true
@@ -211,7 +210,7 @@ function App() {
         });
     };
 
-    this.join = function(JID, nickname) {
+    self.join = function(JID, nickname) {
         jabber.send(
             Xmpp.createStanza('presence', {to: JID + '/' + nickname}, new Xmpp.Element('x', { xmlns: 'http://jabber.org/protocol/muc' }))
         );
