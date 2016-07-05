@@ -14,8 +14,13 @@ var Discord = require('discord.io'),
     PrintDebugDiscord = debug('debug:discord'),
     PrintInfo = debug('info'),
     PrintError = debug('error'),
-    Config = require('json-config')
+    Config = require('json-config'),
+    Server = require('./server')
 ;
+if (process.env.OPENSHIFT_APP_NAME) {
+    // server to prevent openshift idling on free plan
+    Server.start(9090);
+}
 
 /*
 var stanza = Xmpp.createStanza('message', {from: 'test', to: 'asda', type: 'asd'}, new Xmpp.Element('body').t('>asdasdas'));
