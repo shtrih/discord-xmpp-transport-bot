@@ -127,6 +127,9 @@ function App() {
 
             switch (stanza.getName()) {
                 case 'presence': {
+                    if (!config.jabber.showPresence)
+                        break;
+
                     if ('unavailable' === stanza.type) {
                         // change nick
                         var x = stanza.getChildByAttr('code', '303', null, true),

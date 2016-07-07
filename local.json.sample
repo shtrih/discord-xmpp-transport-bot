@@ -5,7 +5,8 @@
     },
     "jabber": {
         "userJid": "user@jabber.org",
-        "userPass": "pass"
+        "userPass": "pass",
+        "showPresence": "false"
     }
     "roomList": [
         {
