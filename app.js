@@ -61,17 +61,20 @@ function App() {
         discord.on('message', function (fromNickname, userID, channelID, message, event) {
 //            PrintDebug('jabber_connected_users', jabber_connected_users);
             if ("ping" === message) {
-                discord.sendMessage({
-                    to: channelID,
-                    message: "pong"
-                });
+                self.discordSend(
+                    channelID,
+                    "pong"
+                );
             }
-            else if ("users" === message) {
+            else if ("!users" === message) {
+                var reply = 'Не получила сведения о присутствии. Попробуйте повторить завтра';
                 if ("object" === typeof(jabber_connected_users[ jid_by_channel[channelID] ]))
-                    discord.sendMessage({
-                        to: channelID,
-                        message: 'Участники: ' + Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', ')
-                    });
+                    reply = '**Участники:** ' + Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', ')
+
+                self.discordSend(
+                    channelID,
+                    reply
+                );
             }
             else if (userID != discord.id && jid_by_channel[channelID]) {
                 // https://discordapp.com/developers/docs/resources/channel#message-formatting
@@ -202,10 +205,10 @@ function App() {
             }
 
             if (message && !message.match(/^>.+:/)) {
-                discord.sendMessage({
-                    to: channel,
-                    message: (use_nick ? '>**' + from_nick + '**: ' : '') + message
-                });
+                 self.discordSend(
+                     channel,
+                     (use_nick ? '**' + from_nick + '**: ' : '') + message
+                 );
             }
         });
     };
@@ -214,6 +217,15 @@ function App() {
         jabber.send(
             Xmpp.createStanza('presence', {to: JID + '/' + nickname}, new Xmpp.Element('x', { xmlns: 'http://jabber.org/protocol/muc' }))
         );
+    };
+
+    self.discordSend = function (toChannelID, message) {
+        discord.sendMessage({
+            to: toChannelID,
+            message: message
+        }, function (error) {
+            PrintError('[Discord error] ' + error);
+        });
     };
 }
 
