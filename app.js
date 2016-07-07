@@ -52,6 +52,8 @@ function App() {
         discord.on('ready', function () {
             PrintInfo('Connected to discord as ' + discord.username + " - (" + discord.id + ")");
 
+            discord.on('disconnect', discord.connect);
+
             // debug all discord.io events
             discord.on('debug', PrintDebugDiscord);
         });
