@@ -6,6 +6,10 @@
  See also: https://gist.github.com/powdahound/940969
  */
 
+if (!process.env.DEBUG) {
+    process.env.DEBUG = 'info,error';
+}
+
 var Discord = require('discord.io'),
     Xmpp = require('node-xmpp-client'),
     debug = require('debug'),
@@ -130,9 +134,6 @@ function App() {
 
             switch (stanza.getName()) {
                 case 'presence': {
-                    if (!config.jabber.showPresence)
-                        break;
-
                     if ('unavailable' === stanza.type) {
                         // change nick
                         var x = stanza.getChildByAttr('code', '303', null, true),
@@ -169,12 +170,28 @@ function App() {
                     // formatting
                     if (message)
                         message = '*'+ message +'*';
+
+                    if (!config.jabber.showPresence)
+                        message = '';
                 }
                 break;
 
                 case 'message': {
                     use_nick = true;
-                    var body = stanza.getChild('body');
+                    var body = stanza.getChild('body'),
+                        x = stanza.getChild('x');
+
+                    // skip chat history
+                    // <message from="dumb@conference.hitagi.ru/crab" to="senjougahara-hitagi@jabber.ru/1502680524" type="groupchat" id="purple97826163" xmlns:stream="http://etherx.jabber.org/streams"><body>123</body><x xmlns="jabber:x:delay" stamp="20160708T09:43:37"/></message>
+                    if (x && 'jabber:x:delay' === x.getAttr('xmlns')) {
+                        break;
+                    }
+
+                    // server messages
+                    //  <message from='dumb@conference.hitagi.ru' to='senjougahara-hitagi@jabber.ru/52626594' type='groupchat'><body>This room is not anonymous</body><x xmlns='http://jabber.org/protocol/muc#user'><status code='100'/></x></message>
+                    if (!from_nick)
+                        from_nick = 'Server';
+
                     if ('groupchat' === stanza.type) {
                         if (stanza.from == from_jid + '/' + nick_by_jid[from_jid]) {
                             break;
@@ -223,8 +240,13 @@ function App() {
         discord.sendMessage({
             to: toChannelID,
             message: message
-        }, function (error) {
-            PrintError('[Discord error] ' + error);
+        }, function (error, info) {
+            if (error) {
+                PrintError('[Discord error] ', error, info);
+            }
+            else {
+                PrintDebugDiscord(info);
+            }
         });
     };
 }
