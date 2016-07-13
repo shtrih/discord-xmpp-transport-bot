@@ -117,7 +117,7 @@ function App() {
         });
 
         jabber.on('stanza', function (stanza) {
-            PrintDebugJabber('Incoming stanza: ', stanza.toString());
+            PrintDebugJabber('Incoming: ', stanza.toString());
 
             var from = stanza.from.split('/', 2),
                 from_jid = from[0],
@@ -179,16 +179,33 @@ function App() {
                 case 'message': {
                     use_nick = true;
                     var body = stanza.getChild('body'),
-                        x = stanza.getChild('x');
+                        x = stanza.getChild('x'),
+                        delay = stanza.getChild('delay')
+                    ;
 
-                    // skip chat history
-                    // <message from="dumb@conference.hitagi.ru/crab" to="senjougahara-hitagi@jabber.ru/1502680524" type="groupchat" id="purple97826163" xmlns:stream="http://etherx.jabber.org/streams"><body>123</body><x xmlns="jabber:x:delay" stamp="20160708T09:43:37"/></message>
-                    if (x && 'jabber:x:delay' === x.getAttr('xmlns')) {
+                    /* Skip chat history
+                     *
+                     * <message from="dumb@conference.hitagi.ru/crab" to="senjougahara-hitagi@jabber.ru/1502680524" type="groupchat" id="purple97826163" xmlns:stream="http://etherx.jabber.org/streams">
+                     *     <body>123</body>
+                     *     <x xmlns="jabber:x:delay" stamp="20160708T09:43:37"/>
+                     * </message>
+                     *
+                     * <message from="animufags@conference.jabber.ru/Инопланетная бaка" to="senjougahara-hitagi@jabber.ru/1035180042" xml:lang="ru" type="groupchat" id="ab55a" xmlns:stream="http://etherx.jabber.org/streams">
+                     *     <body>он вроде просто писал любое сообщение и она глючила</body>
+                     *     <delay xmlns="urn:xmpp:delay" from="animufags@conference.jabber.ru" stamp="2016-07-13T19:46:31.799Z"/>
+                     * </message>
+                     */
+                    if (delay || x && 'jabber:x:delay' === x.getAttr('xmlns')) {
                         break;
                     }
 
-                    // server messages
-                    //  <message from='dumb@conference.hitagi.ru' to='senjougahara-hitagi@jabber.ru/52626594' type='groupchat'><body>This room is not anonymous</body><x xmlns='http://jabber.org/protocol/muc#user'><status code='100'/></x></message>
+                    /* Server messages
+                     *
+                     *  <message from='dumb@conference.hitagi.ru' to='senjougahara-hitagi@jabber.ru/52626594' type='groupchat'>
+                     *      <body>This room is not anonymous</body>
+                     *      <x xmlns='http://jabber.org/protocol/muc#user'><status code='100'/></x>
+                     *  </message>
+                     */
                     if (!from_nick)
                         from_nick = 'Server';
 
@@ -209,7 +226,9 @@ function App() {
                             break;
                         }
 
-                        message = body.getText();
+                        if (body) {
+                            message = body.getText();
+                        }
                     }
                     else if ('chat' === stanza.type) {
                         // direct messages
