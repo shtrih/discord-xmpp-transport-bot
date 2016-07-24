@@ -106,6 +106,14 @@ function App() {
                 channel_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].roomChannelId;
                 nick_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].nick;
             }
+
+            // TODO: handle disconnect events by status codes (http://xmpp.org/extensions/xep-0045.html#registrar-statuscodes)
+            setInterval(function () {
+                for (var i = 0 ; i < config.roomList.length; i++) {
+                    PrintInfo('Reconnecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
+                    self.join(config.roomList[i].roomJid, config.roomList[i].nick);
+                }
+            }, (config.jabber.reconnectIntervalSec || 600) * 1000);
         });
 
         jabber.on('error', function (e) {

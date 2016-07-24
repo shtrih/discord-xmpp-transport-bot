@@ -6,7 +6,8 @@
     "jabber": {
         "userJid": "user@jabber.org",
         "userPass": "pass",
-        "showPresence": "false"
+        "showPresence": true,
+        "reconnectIntervalSec": 600
     }
     "roomList": [
         {
