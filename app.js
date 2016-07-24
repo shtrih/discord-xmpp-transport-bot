@@ -40,6 +40,7 @@ function App() {
         jid_by_channel = {},
         channel_by_jid = {},
         nick_by_jid = {},
+        nick_mask = {},
         jabber_connected_users = {}
     ;
 
@@ -83,9 +84,10 @@ function App() {
             else if (userID != discord.id && jid_by_channel[channelID]) {
                 // https://discordapp.com/developers/docs/resources/channel#message-formatting
                 message = discord.fixMessage(message);
+                fromNickname = self.getNicknameWMask(jid_by_channel[channelID], fromNickname);
 
                 jabber.send(
-                    Xmpp.createStanza('message', {to: jid_by_channel[channelID], type: 'groupchat'}, new Xmpp.Element('body').t('от ' + fromNickname + ': ' + message))
+                    Xmpp.createStanza('message', {to: jid_by_channel[channelID], type: 'groupchat'}, new Xmpp.Element('body').t(fromNickname + message))
                 );
             }
         });
@@ -105,6 +107,7 @@ function App() {
                 jid_by_channel[ config.roomList[i].roomChannelId ] = config.roomList[i].roomJid;
                 channel_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].roomChannelId;
                 nick_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].nick;
+                nick_mask[ config.roomList[i].roomJid ] = config.roomList[i].fromNickMask;
             }
 
             // TODO: handle disconnect events by status codes (http://xmpp.org/extensions/xep-0045.html#registrar-statuscodes)
@@ -185,6 +188,10 @@ function App() {
                 break;
 
                 case 'message': {
+                    // ours messages from the discord
+                    if (from_nick === nick_by_jid[from_jid])
+                        return;
+
                     use_nick = true;
                     var body = stanza.getChild('body'),
                         x = stanza.getChild('x'),
@@ -276,5 +283,15 @@ function App() {
             }
         });
     };
+
+    self.getNicknameWMask = function (roomJid, fromNick) {
+        var mask = nick_mask[ roomJid ];
+        if (typeof mask === "string") {
+            return mask.replace('%nickname%', fromNick);
+        }
+        else {
+            return fromNick;
+        }
+    }
 }
 

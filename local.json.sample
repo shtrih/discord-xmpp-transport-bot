@@ -13,12 +13,14 @@
         {
             "nick": "Yuki",
             "roomChannelId": "000000000000000000",
-            "roomJid": "some-conf@conference.jabber.org"
+            "roomJid": "some-conf@conference.jabber.org",
+            "fromNickMask": "from %nickname%: "
         },
         {
             "nick": "Yuki",
             "roomChannelId": "000000000000000000",
-            "roomJid": "another-conf@conference.jabber.org"
+            "roomJid": "another-conf@conference.jabber.org",
+            "fromNickMask": "<%nickname%>: "
         }
     ]
 }
