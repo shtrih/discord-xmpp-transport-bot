@@ -41,6 +41,7 @@ function App() {
         channel_by_jid = {},
         nick_by_jid = {},
         nick_mask = {},
+        show_presence_by_jid = {},
         jabber_connected_users = {}
     ;
 
@@ -74,7 +75,7 @@ function App() {
             else if ("!users" === message) {
                 var reply = 'Не получила сведения о присутствии. Попробуйте повторить завтра';
                 if ("object" === typeof(jabber_connected_users[ jid_by_channel[channelID] ]))
-                    reply = '**Участники:** ' + Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', ')
+                    reply = '**Участники:** ' + Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', ');
 
                 self.discordSend(
                     channelID,
@@ -108,6 +109,7 @@ function App() {
                 channel_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].roomChannelId;
                 nick_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].nick;
                 nick_mask[ config.roomList[i].roomJid ] = config.roomList[i].fromNickMask;
+                show_presence_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].showPresence;
             }
 
             // TODO: handle disconnect events by status codes (http://xmpp.org/extensions/xep-0045.html#registrar-statuscodes)
@@ -182,8 +184,13 @@ function App() {
                     if (message)
                         message = '*'+ message +'*';
 
-                    if (!config.jabber.showPresence)
+                    if (typeof show_presence_by_jid[from_jid] === 'boolean') {
+                        if (!show_presence_by_jid[from_jid])
+                            message = '';
+                    }
+                    else if (!config.jabber.showPresence) {
                         message = '';
+                    }
                 }
                 break;
 

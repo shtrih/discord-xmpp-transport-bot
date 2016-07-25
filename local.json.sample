@@ -14,7 +14,8 @@
             "nick": "Yuki",
             "roomChannelId": "000000000000000000",
             "roomJid": "some-conf@conference.jabber.org",
-            "fromNickMask": "from %nickname%: "
+            "fromNickMask": "from %nickname%: ",
+            "showPresence": false
         },
         {
             "nick": "Yuki",
