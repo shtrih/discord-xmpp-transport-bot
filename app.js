@@ -42,7 +42,8 @@ function App() {
         nick_by_jid = {},
         nick_mask = {},
         show_presence_by_jid = {},
-        jabber_connected_users = {}
+        jabber_connected_users = {},
+        conference_reconnect_interval
     ;
 
     self.run = function () {
@@ -52,7 +53,8 @@ function App() {
         });
         jabber = new Xmpp.Client({
             jid: config.jabber.userJid,
-            password: config.jabber.userPass
+            password: config.jabber.userPass,
+            bosh: false
         });
 
         discord.on('ready', function () {
@@ -113,12 +115,24 @@ function App() {
             }
 
             // TODO: handle disconnect events by status codes (http://xmpp.org/extensions/xep-0045.html#registrar-statuscodes)
-            setInterval(function () {
+            conference_reconnect_interval = setInterval(function () {
                 for (var i = 0 ; i < config.roomList.length; i++) {
                     PrintInfo('Reconnecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
                     self.join(config.roomList[i].roomJid, config.roomList[i].nick);
                 }
             }, (config.jabber.reconnectIntervalSec || 600) * 1000);
+        });
+
+        jabber.on('offline', function () {
+            jid_by_channel = {};
+            channel_by_jid = {};
+            nick_by_jid = {};
+            nick_mask = {};
+            show_presence_by_jid = {};
+            jabber_connected_users = {};
+            clearInterval(conference_reconnect_interval);
+
+            setTimeout(function () {jabber.connect()}, 5000)
         });
 
         jabber.on('error', function (e) {
