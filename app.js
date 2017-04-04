@@ -18,7 +18,8 @@ var Discord = require('discord.io'),
     PrintDebugDiscord = debug('debug:discord'),
     PrintInfo = debug('info'),
     PrintError = debug('error'),
-    Config = require('json-config')
+    Config = require('json-config'),
+    Ignore = require('./lib/ignoreUsers.js')()
 ;
 
 /*
@@ -68,6 +69,8 @@ function App() {
 
         discord.on('message', function (fromNickname, userID, channelID, message, event) {
 //            PrintDebug('jabber_connected_users', jabber_connected_users);
+            var match;
+
             if ("ping" === message) {
                 self.discordSend(
                     channelID,
@@ -75,13 +78,36 @@ function App() {
                 );
             }
             else if ("!users" === message) {
-                var reply = 'Не получила сведения о присутствии. Попробуйте повторить завтра';
+                var reply = 'Не получила сведения о присутствии. Попробуйте повторить завтра.';
+                var ignored = Ignore.list().join(', ');
+
                 if ("object" === typeof(jabber_connected_users[ jid_by_channel[channelID] ]))
                     reply = '**Участники:** ' + Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', ');
+
+                if (ignored)
+                    reply += '\n**В игноре:** ' + ignored;
 
                 self.discordSend(
                     channelID,
                     reply
+                );
+            }
+            else if (match = message.match(/^!((un)?ignore)\s+(.*)/i)) {
+                var nickname = match[3],
+                    ignore = 'ignore' === match[1],
+                    prefix = ignore ? '' : 'un'
+                ;
+
+                if (ignore) {
+                    Ignore.add(nickname)
+                }
+                else {
+                    Ignore.remove(nickname)
+                }
+
+                self.discordSend(
+                    channelID,
+                    '*'+ nickname +'* '+ prefix +'ignored.'
                 );
             }
             else if (userID != discord.id && jid_by_channel[channelID]) {
@@ -246,7 +272,12 @@ function App() {
                         from_nick = 'Server';
 
                     if ('groupchat' === stanza.type) {
-                        if (stanza.from == from_jid + '/' + nick_by_jid[from_jid]) {
+                        if (stanza.from === from_jid + '/' + nick_by_jid[from_jid]) {
+                            break;
+                        }
+
+                        if (Ignore.check(from_nick)) {
+                            PrintDebugDiscord('Ignore msg from ' + from_nick);
                             break;
                         }
 

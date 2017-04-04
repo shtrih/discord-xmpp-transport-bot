@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "DEBUG=* nodejs app.js",
+    "start-win": "set DEBUG=info,error,debug,debug:discord,debug:jabber && node ./app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "shtrih",
@@ -14,5 +15,8 @@
     "discord.io": "^1.12.0",
     "json-config": "0.0.1",
     "node-xmpp-client": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=0.10"
   }
 }
