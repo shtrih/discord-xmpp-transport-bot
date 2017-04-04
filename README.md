@@ -7,7 +7,7 @@ Simple transport bot between Discord channel and Jabber conference
  - `nodejs ./app.js` or `npm start` — start application
  
 # Debugging
-Set environment variable `DEBUG` to values according to [documentation](https://github.com/visionmedia/debug/blob/master/Readme.md): 
+Set environment variable `DEBUG` to values according to [documentation](https://github.com/visionmedia/debug/blob/master/README.md): 
  - `info`
  - `error`
  - `debug:jabber`
