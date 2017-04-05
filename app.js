@@ -11,7 +11,7 @@ if (!process.env.DEBUG) {
 }
 
 var Discord = require('./lib/RemDiscord.js'),
-    Xmpp = require('node-xmpp-client'),
+    Xmpp = require('./lib/RamXmpp.js'),
     debug = require('debug'),
     PrintDebug = debug('debug'),
     PrintDebugJabber = debug('debug:jabber'),
@@ -22,18 +22,12 @@ var Discord = require('./lib/RemDiscord.js'),
     Ignore = require('./lib/ignoreUsers.js')()
 ;
 
-/*
-var stanza = Xmpp.createStanza('message', {from: 'test', to: 'asda', type: 'asd'}, new Xmpp.Element('body').t('>asdasdas'));
-console.log(stanza.toString(), stanza.from, stanza.foo, stanza.attrs.foo);
-console.log(Xmpp.createStanza('message', {from: 'test', to: 'asda', type: 'asd'}).c('body').t('>asdasdas').up().toString());
-console.log((new Xmpp.Element('message', { to: 'asd', type: 'groupchat' })).toString());
-*/
-
 new App().run();
 
 function App() {
     var self = this,
         remDiscord,
+        ramXmpp,
         discord,
         jabber,
         config = Config({
@@ -50,12 +44,9 @@ function App() {
 
     self.run = function () {
         remDiscord = new Discord(config.discord.token, true);
-        discord = remDiscord.getDiscord();
-        jabber = new Xmpp.Client({
-            jid: config.jabber.userJid,
-            password: config.jabber.userPass,
-            bosh: false
-        });
+        discord = remDiscord.getClient();
+        ramXmpp = new Xmpp(config.jabber.userJid, config.jabber.userPass);
+        jabber = ramXmpp.getClient();
 
         discord.on('ready', function () {
             PrintInfo('Connected to discord as ' + discord.username + " - (" + discord.id + ")");
@@ -115,23 +106,16 @@ function App() {
                 var attachments = remDiscord.getAttachments(event);
                 message = remDiscord.fixMessage(message);
 
-                jabber.send(
-                    Xmpp.createStanza('message', {to: jid_by_channel[channelID], type: 'groupchat'}, new Xmpp.Element('body').t(userNick + message + attachments))
-                );
+                ramXmpp.send(jid_by_channel[channelID], userNick + message + attachments);
             }
         });
 
         jabber.on('online', function () {
             PrintInfo('Connected to jabber as ' + config.jabber.userJid);
 
-            // set ourselves as online
-            /*jabber.send(new xmpp.Element('presence', { type: 'available' }).
-             c('show').t('chat')
-             );*/
-
             for (var i = 0 ; i < config.roomList.length; i++) {
                 PrintInfo('Connecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
-                self.join(config.roomList[i].roomJid, config.roomList[i].nick);
+                ramXmpp.join(config.roomList[i].roomJid, config.roomList[i].nick);
 
                 jid_by_channel[ config.roomList[i].roomChannelId ] = config.roomList[i].roomJid;
                 channel_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].roomChannelId;
@@ -144,7 +128,7 @@ function App() {
             conference_reconnect_interval = setInterval(function () {
                 for (var i = 0 ; i < config.roomList.length; i++) {
                     PrintInfo('Reconnecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
-                    self.join(config.roomList[i].roomJid, config.roomList[i].nick);
+                    ramXmpp.join(config.roomList[i].roomJid, config.roomList[i].nick);
                 }
             }, (config.jabber.reconnectIntervalSec || 600) * 1000);
         });
@@ -327,12 +311,6 @@ function App() {
                  );
             }
         });
-    };
-
-    self.join = function(JID, nickname) {
-        jabber.send(
-            Xmpp.createStanza('presence', {to: JID + '/' + nickname}, new Xmpp.Element('x', { xmlns: 'http://jabber.org/protocol/muc' }))
-        );
     };
 
     self.getNicknameWMask = function (roomJid, fromNick) {
