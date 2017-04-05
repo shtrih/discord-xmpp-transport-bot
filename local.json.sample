@@ -2,6 +2,7 @@
     "discord": {
         "token": "",
         "channelId": ""
+        "adminId": ""
     },
     "jabber": {
         "userJid": "user@jabber.org",

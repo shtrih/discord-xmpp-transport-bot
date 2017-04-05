@@ -10,7 +10,7 @@ if (!process.env.DEBUG) {
     process.env.DEBUG = 'info,error';
 }
 
-var Discord = require('discord.io'),
+var Discord = require('./lib/RemDiscord.js'),
     Xmpp = require('node-xmpp-client'),
     debug = require('debug'),
     PrintDebug = debug('debug'),
@@ -33,6 +33,7 @@ new App().run();
 
 function App() {
     var self = this,
+        remDiscord,
         discord,
         jabber,
         config = Config({
@@ -48,10 +49,8 @@ function App() {
     ;
 
     self.run = function () {
-        discord = new Discord.Client({
-            token: config.discord.token,
-            autorun: true
-        });
+        remDiscord = new Discord(config.discord.token, true);
+        discord = remDiscord.getDiscord();
         jabber = new Xmpp.Client({
             jid: config.jabber.userJid,
             password: config.jabber.userPass,
@@ -72,7 +71,7 @@ function App() {
             var match;
 
             if ("ping" === message) {
-                self.discordSend(
+                remDiscord.send(
                     channelID,
                     "pong"
                 );
@@ -87,7 +86,7 @@ function App() {
                 if (ignored)
                     reply += '\n**В игноре:** ' + ignored;
 
-                self.discordSend(
+                remDiscord.send(
                     channelID,
                     reply
                 );
@@ -105,15 +104,15 @@ function App() {
                     Ignore.remove(nickname)
                 }
 
-                self.discordSend(
+                remDiscord.send(
                     channelID,
                     '*'+ nickname +'* '+ prefix +'ignored.'
                 );
             }
             else if (userID != discord.id && jid_by_channel[channelID]) {
-                message = self.fixMessage(message);
+                message = remDiscord.fixMessage(message);
                 fromNickname = self.getNicknameWMask(jid_by_channel[channelID], fromNickname);
-                var attachments = self.getAttachments(event);
+                var attachments = remDiscord.getAttachments(event);
 
                 jabber.send(
                     Xmpp.createStanza('message', {to: jid_by_channel[channelID], type: 'groupchat'}, new Xmpp.Element('body').t(fromNickname + message + attachments))
@@ -163,6 +162,11 @@ function App() {
 
         jabber.on('error', function (e) {
             PrintError(e);
+
+            remDiscord.send(
+                config.discord.adminId,
+                '**[Jabber error]** `' + e + '`'
+            );
         });
 
         jabber.on('connection', function () {
@@ -182,6 +186,12 @@ function App() {
 
             if ('error' == stanza.type) {
                 PrintError('[Stanza error] ' + stanza);
+
+                remDiscord.send(
+                    channel,
+                    '**[Stanza error]** ```' + stanza + '```'
+                );
+
                 return;
             }
 
@@ -308,7 +318,7 @@ function App() {
             }
 
             if (message && !message.match(/^>.+:/)) {
-                 self.discordSend(
+                remDiscord.send(
                      channel,
                      (use_nick ? '**' + from_nick + '**: ' : '') + message
                  );
@@ -322,20 +332,6 @@ function App() {
         );
     };
 
-    self.discordSend = function (toChannelID, message) {
-        discord.sendMessage({
-            to: toChannelID,
-            message: message
-        }, function (error, info) {
-            if (error) {
-                PrintError('[Discord error] ', error, info);
-            }
-            else {
-                PrintDebugDiscord(info);
-            }
-        });
-    };
-
     self.getNicknameWMask = function (roomJid, fromNick) {
         var mask = nick_mask[ roomJid ];
         if (typeof mask === "string") {
@@ -344,52 +340,6 @@ function App() {
         else {
             return fromNick;
         }
-    };
-
-    // https://discordapp.com/developers/docs/resources/channel#message-formatting
-    self.fixMessage = function (message) {
-        var result;
-        // Work with the smiles <:mmLol:234065305956122626> → https://cdn.discordapp.com/emojis/234065305956122626.png
-        result = message.replace(/<:(\w+):(\d+)>/g, 'https://cdn.discordapp.com/emojis/$2.png?$1');
-
-        // Replace Snowflakes with the names if applicable
-        result = discord.fixMessage(result);
-
-        return result;
-    };
-
-    /**
-     * Get attachments as string
-     *
-     * @param event object { t: 'MESSAGE_CREATE', s: 4, op: 0, d: { type: 0, tts: false, timestamp: '2016-10-15T10:03:04.874000+00:00', pinned: false, nonce: null, mentions: [], mention_roles: [], mention_everyone: false, id: '236791046598688768', embeds: [], edited_timestamp: null, content: '', channel_id: '170997528299307009', author: { username: 'shtrih', id: '149052925308698624', discriminator: '9483', avatar: '28f0fa1105487f80e66362984741f1fc' },
-     attachments: [
-        {
-            width: 1920,
-            url: 'https://cdn.discordapp.com/attachments/170997528299307009/236801030262751232/Dota_2_01.06.2016_21_26_49.png',
-            size: 91895,
-            proxy_url: 'https://images-1.discordapp.net/.eJwFwUsOgyAUAMC7cID3o4K47j0IQYImKgReV03v3pmv-YzLbOZQ7XND3M-Z29hhahupFqit1aukfk7I7cakmvJxl0cnsqcQ_CKrhGDJEwUU61ZisiRO_MJiBd9NU5RIDORAiF0UjuLiK0B_qvn9AaWuJnk.uxdxHG4wWsu-IsSBkQYh5ropanQ',
-            id: '236801030262751232',
-            height: 1080,
-            filename: 'Dota_2_01.06.2016_21_26_49.png'
-        }
-     ] } }
-     */
-    self.getAttachments = function (event) {
-        var result = '';
-        if (event.d && event.d.attachments) {
-            for (var i = 0, len = event.d.attachments.length; i < len; i++) {
-                result += '\n'+ event.d.attachments[i].url
-                    +' ('+ (event.d.attachments[i].size / 1024).toFixed(1) +'Kb';
-
-                if (event.d.attachments[i].width) {
-                    result += ', ' + event.d.attachments[i].width +'×'+ event.d.attachments[i].height;
-                }
-
-                result += ')';
-            }
-        }
-
-        return result;
     };
 }
 
