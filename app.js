@@ -163,10 +163,12 @@ function App() {
         jabber.on('error', function (e) {
             PrintError(e);
 
-            remDiscord.send(
-                config.discord.adminId,
-                '**[Jabber error]** `' + e + '`'
-            );
+            if (config.discord.adminId) {
+                remDiscord.send(
+                    config.discord.adminId,
+                    '**[Jabber error]** `' + e + '`'
+                );
+            }
         });
 
         jabber.on('connection', function () {
