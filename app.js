@@ -110,12 +110,13 @@ function App() {
                 );
             }
             else if (userID != discord.id && jid_by_channel[channelID]) {
-                message = remDiscord.fixMessage(message);
-                fromNickname = self.getNicknameWMask(jid_by_channel[channelID], fromNickname);
+                var userNick = remDiscord.fixMessage('<@!'+ userID +'>');
+                userNick = self.getNicknameWMask(jid_by_channel[channelID], userNick);
                 var attachments = remDiscord.getAttachments(event);
+                message = remDiscord.fixMessage(message);
 
                 jabber.send(
-                    Xmpp.createStanza('message', {to: jid_by_channel[channelID], type: 'groupchat'}, new Xmpp.Element('body').t(fromNickname + message + attachments))
+                    Xmpp.createStanza('message', {to: jid_by_channel[channelID], type: 'groupchat'}, new Xmpp.Element('body').t(userNick + message + attachments))
                 );
             }
         });
