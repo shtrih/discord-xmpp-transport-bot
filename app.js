@@ -7,17 +7,19 @@
  */
 
 if (!process.env.DEBUG) {
-    process.env.DEBUG = 'info,error';
+    process.env.DEBUG = 'info,error:*,-debug:*';
 }
 
 var Discord = require('./lib/RemDiscord.js'),
     Xmpp = require('./lib/RamXmpp.js'),
     debug = require('debug'),
-    PrintDebug = debug('debug'),
+    PrintDebug = debug('debug:app'),
     PrintDebugJabber = debug('debug:jabber'),
+    PrintErrorJabber = debug('error:jabber'),
     PrintDebugDiscord = debug('debug:discord'),
+    PrintErrorDiscord = debug('error:discord'),
     PrintInfo = debug('info'),
-    PrintError = debug('error'),
+    PrintError = debug('error:app'),
     Config = require('json-config'),
     Ignore = require('./lib/ignoreUsers.js')()
 ;
@@ -146,7 +148,7 @@ function App() {
         });
 
         jabber.on('error', function (e) {
-            PrintError(e);
+            PrintErrorJabber(e);
 
             if (config.discord.adminId) {
                 remDiscord.send(
@@ -171,8 +173,8 @@ function App() {
                 use_nick
             ;
 
-            if ('error' == stanza.type) {
-                PrintError('[Stanza error] ' + stanza);
+            if ('error' === stanza.type) {
+                PrintErrorJabber('[Stanza error] ' + stanza);
 
                 remDiscord.send(
                     channel,
@@ -189,7 +191,7 @@ function App() {
                         var x = stanza.getChildByAttr('code', '303', null, true),
                             item = stanza.getChildrenByFilter(
                                 function (el) {
-                                    return el instanceof Xmpp.Element && el.getName() === 'item';
+                                    return el instanceof jabber.Element && el.getName() === 'item';
                                 },
                                 true
                             )[0]
@@ -283,9 +285,9 @@ function App() {
                             var topic = (body ? body : subject).getText();
                             PrintDebugJabber('Try to set discord topic: ', topic);
                             discord.editChannelInfo({
-                                channel: channel,
+                                channelID: channel,
                                 topic: topic + '\n ~ ' + from_jid
-                            });
+                            }, PrintErrorDiscord);
 
                             break;
                         }
