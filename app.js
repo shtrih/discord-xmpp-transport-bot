@@ -1,3 +1,5 @@
+"use strict";
+
 /*
  Create app: https://discordapp.com/developers/applications/me
  Invite bot to Discord: https://discordapp.com/oauth2/authorize?client_id=197985532670771200&scope=bot&permissions=19472
@@ -10,14 +12,12 @@ if (!process.env.DEBUG) {
     process.env.DEBUG = 'info,error:*,-debug:*';
 }
 
-var Discord = require('./lib/RemDiscord.js'),
+const Discord = require('./lib/RemDiscord.js'),
     Xmpp = require('./lib/RamXmpp.js'),
     debug = require('debug'),
     PrintDebug = debug('debug:app'),
     PrintDebugJabber = debug('debug:jabber'),
     PrintErrorJabber = debug('error:jabber'),
-    PrintDebugDiscord = debug('debug:discord'),
-    PrintErrorDiscord = debug('error:discord'),
     PrintInfo = debug('info'),
     PrintError = debug('error:app'),
     Config = require('json-config'),
@@ -163,7 +163,7 @@ function App() {
         });
 
         jabber.on('stanza', function (stanza) {
-            PrintDebugJabber('Incoming: ', stanza.toString());
+            // PrintDebugJabber('Incoming: ', stanza.toString());
 
             var from = stanza.from.split('/', 2),
                 from_jid = from[0],
@@ -241,7 +241,8 @@ function App() {
                     use_nick = true;
                     var body = stanza.getChild('body'),
                         x = stanza.getChild('x'),
-                        delay = stanza.getChild('delay')
+                        delay = stanza.getChild('delay'),
+                        subject = stanza.getChild('subject')
                     ;
 
                     /* Skip chat history
@@ -256,7 +257,7 @@ function App() {
                      *     <delay xmlns="urn:xmpp:delay" from="animufags@conference.jabber.ru" stamp="2016-07-13T19:46:31.799Z"/>
                      * </message>
                      */
-                    if (delay || x && 'jabber:x:delay' === x.getAttr('xmlns')) {
+                    if (!subject && (delay || x && 'jabber:x:delay' === x.getAttr('xmlns'))) {
                         break;
                     }
 
@@ -280,14 +281,10 @@ function App() {
                             break;
                         }
 
-                        var subject = stanza.getChild('subject');
                         if (subject) {
                             var topic = (body ? body : subject).getText();
                             PrintDebugJabber('Try to set discord topic: ', topic);
-                            discord.editChannelInfo({
-                                channelID: channel,
-                                topic: topic + '\n ~ ' + from_jid
-                            }, PrintErrorDiscord);
+                            remDiscord.editChannel(channel, topic + '\n ~ ' + from_jid);
 
                             break;
                         }
