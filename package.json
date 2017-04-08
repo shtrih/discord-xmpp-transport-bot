@@ -4,8 +4,8 @@
   "description": "Simple transport bot between Discord channel and Jabber conference",
   "main": "app.js",
   "scripts": {
-    "start": "DEBUG=* nodejs app.js",
-    "start-win": "set DEBUG=info,error,debug,debug:discord,debug:jabber && node ./app.js",
+    "start": "export DEBUG=info,error:*,-debug:* node app.js",
+    "start-win": "set DEBUG=info,error:*,debug:*&& node ./app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "shtrih",
