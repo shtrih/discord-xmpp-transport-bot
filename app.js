@@ -280,7 +280,7 @@ function App() {
                         }
 
                         if (Ignore.check(from_nick)) {
-                            PrintDebugDiscord('Ignore msg from ' + from_nick);
+                            LogDebug('Ignore msg from ' + from_nick);
                             break;
                         }
 
