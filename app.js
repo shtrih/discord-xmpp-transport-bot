@@ -107,7 +107,12 @@ function App() {
             }
             else if (userID !== discord.id && jid_by_channel[channelID]) {
                 let userNick = remDiscord.fixMessage('<@!'+ userID +'>');
+
+                if ('@null' === userNick) {
+                    userNick = '@' + fromNickname;
+                }
                 userNick = this.getNicknameWMask(jid_by_channel[channelID], userNick);
+
                 const attachments = remDiscord.getAttachments(event);
                 message = remDiscord.fixMessage(message);
 
