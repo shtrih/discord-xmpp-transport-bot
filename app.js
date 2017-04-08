@@ -108,7 +108,7 @@ function App() {
             else if (userID !== discord.id && jid_by_channel[channelID]) {
                 let userNick = remDiscord.fixMessage('<@!'+ userID +'>');
 
-                if ('@null' === userNick) {
+                if ('@null' === userNick || '@undefined' === userNick) {
                     userNick = '@' + fromNickname;
                 }
                 userNick = this.getNicknameWMask(jid_by_channel[channelID], userNick);
