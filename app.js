@@ -15,63 +15,66 @@ if (!process.env.DEBUG) {
 const Discord = require('./lib/RemDiscord.js'),
     Xmpp = require('./lib/RamXmpp.js'),
     debug = require('debug'),
-    PrintDebug = debug('debug:app'),
-    PrintDebugJabber = debug('debug:jabber'),
-    PrintErrorJabber = debug('error:jabber'),
-    PrintInfo = debug('info'),
-    PrintError = debug('error:app'),
-    Config = require('json-config'),
+    LogInfo = debug('info'),
+    LogDebug = debug('debug:app'),
+    LogError = debug('error:app'),
+    LogDebugJabber = debug('debug:jabber'),
+    LogErrorJabber = debug('error:jabber'),
+    config = require('json-config')({
+        config_dir: "./"
+    }),
     Ignore = require('./lib/ignoreUsers.js')()
 ;
 
 new App().run();
 
 function App() {
-    var self = this,
-        remDiscord,
-        ramXmpp,
-        discord,
-        jabber,
-        config = Config({
-            config_dir: "./"
-        }),
+    const
+        remDiscord = new Discord(config.discord.token, true),
+        discord = remDiscord.getClient(),
+        ramXmpp = new Xmpp(config.jabber.userJid, config.jabber.userPass),
+        jabber = ramXmpp.getClient()
+    ;
+    let conferenceSendPresenceInterval,
         jid_by_channel = {},
         channel_by_jid = {},
         nick_by_jid = {},
         nick_mask = {},
         show_presence_by_jid = {},
-        jabber_connected_users = {},
-        conference_reconnect_interval
+        jabber_connected_users = {}
     ;
 
-    self.run = function () {
-        remDiscord = new Discord(config.discord.token, true);
-        discord = remDiscord.getClient();
-        ramXmpp = new Xmpp(config.jabber.userJid, config.jabber.userPass);
-        jabber = ramXmpp.getClient();
-
-        discord.on('ready', function () {
-            PrintInfo('Connected to discord as ' + discord.username + " - (" + discord.id + ")");
-
-            discord.on('disconnect', discord.connect);
-
-            // debug all discord.io events
-            discord.on('debug', PrintDebugDiscord);
+    this.run = function () {
+        discord.on('ready', () => {
+            LogInfo('Connected to discord as ' + discord.username + " - (" + discord.id + ")");
         });
 
-        discord.on('message', function (fromNickname, userID, channelID, message, event) {
-//            PrintDebug('jabber_connected_users', jabber_connected_users);
-            var match;
+        discord.on('disconnect', (message, code) => {
+            if (code) {
+                remDiscord.logError({'code': code, 'message': message});
+            }
+            else {
+                remDiscord.logDebug({'code': code, 'message': message});
+            }
+            setTimeout(discord.connect, 10000)
+        });
 
-            if ("ping" === message) {
+        // debug all discord.io events
+        discord.on('debug', remDiscord.logDebug);
+
+        discord.on('message', (fromNickname, userID, channelID, message, event) => {
+//            LogDebug('jabber_connected_users', jabber_connected_users);
+            let match;
+
+            if ("!ping" === message) {
                 remDiscord.send(
                     channelID,
                     "pong"
                 );
             }
             else if ("!users" === message) {
-                var reply = 'Не получила сведения о присутствии. Попробуйте повторить завтра.';
-                var ignored = Ignore.list().join(', ');
+                let reply = 'Не получила сведения о присутствии. Попробуйте повторить завтра.';
+                let ignored = Ignore.list().join(', ');
 
                 if ("object" === typeof(jabber_connected_users[ jid_by_channel[channelID] ]))
                     reply = '**Участники:** ' + Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', ');
@@ -85,7 +88,7 @@ function App() {
                 );
             }
             else if (match = message.match(/^!((un)?ignore)\s+(.*)/i)) {
-                var nickname = match[3],
+                const nickname = match[3],
                     ignore = 'ignore' === match[1],
                     prefix = ignore ? '' : 'un'
                 ;
@@ -102,10 +105,10 @@ function App() {
                     '*'+ nickname +'* '+ prefix +'ignored.'
                 );
             }
-            else if (userID != discord.id && jid_by_channel[channelID]) {
-                var userNick = remDiscord.fixMessage('<@!'+ userID +'>');
-                userNick = self.getNicknameWMask(jid_by_channel[channelID], userNick);
-                var attachments = remDiscord.getAttachments(event);
+            else if (userID !== discord.id && jid_by_channel[channelID]) {
+                let userNick = remDiscord.fixMessage('<@!'+ userID +'>');
+                userNick = this.getNicknameWMask(jid_by_channel[channelID], userNick);
+                const attachments = remDiscord.getAttachments(event);
                 message = remDiscord.fixMessage(message);
 
                 ramXmpp.send(jid_by_channel[channelID], userNick + message + attachments);
@@ -113,10 +116,10 @@ function App() {
         });
 
         jabber.on('online', function () {
-            PrintInfo('Connected to jabber as ' + config.jabber.userJid);
+            LogInfo('Connected to jabber as ' + config.jabber.userJid);
 
-            for (var i = 0 ; i < config.roomList.length; i++) {
-                PrintInfo('Connecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
+            for (let i = 0 ; i < config.roomList.length; i++) {
+                LogInfo('Connecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
                 ramXmpp.join(config.roomList[i].roomJid, config.roomList[i].nick);
 
                 jid_by_channel[ config.roomList[i].roomChannelId ] = config.roomList[i].roomJid;
@@ -127,9 +130,9 @@ function App() {
             }
 
             // TODO: handle disconnect events by status codes (http://xmpp.org/extensions/xep-0045.html#registrar-statuscodes)
-            conference_reconnect_interval = setInterval(function () {
-                for (var i = 0 ; i < config.roomList.length; i++) {
-                    PrintInfo('Reconnecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
+            conferenceSendPresenceInterval = setInterval(function () {
+                for (let i = 0 ; i < config.roomList.length; i++) {
+                    LogInfo('Reconnecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
                     ramXmpp.join(config.roomList[i].roomJid, config.roomList[i].nick);
                 }
             }, (config.jabber.reconnectIntervalSec || 600) * 1000);
@@ -142,13 +145,13 @@ function App() {
             nick_mask = {};
             show_presence_by_jid = {};
             jabber_connected_users = {};
-            clearInterval(conference_reconnect_interval);
+            clearInterval(conferenceSendPresenceInterval);
 
-            setTimeout(function () {jabber.connect()}, 5000)
+            setTimeout(jabber.connect, 10000)
         });
 
         jabber.on('error', function (e) {
-            PrintErrorJabber(e);
+            LogErrorJabber(e);
 
             if (config.discord.adminId) {
                 remDiscord.send(
@@ -159,13 +162,13 @@ function App() {
         });
 
         jabber.on('connection', function () {
-            PrintInfo('Jabber online');
+            LogInfo('Jabber online');
         });
 
         jabber.on('stanza', function (stanza) {
-            // PrintDebugJabber('Incoming: ', stanza.toString());
+            // LogDebugJabber('Incoming: ', stanza.toString());
 
-            var from = stanza.from.split('/', 2),
+            let from = stanza.from.split('/', 2),
                 from_jid = from[0],
                 from_nick = from[1],
                 channel = channel_by_jid[from_jid],
@@ -174,7 +177,7 @@ function App() {
             ;
 
             if ('error' === stanza.type) {
-                PrintErrorJabber('[Stanza error] ' + stanza);
+                LogErrorJabber('[Stanza error] ' + stanza);
 
                 remDiscord.send(
                     channel,
@@ -188,7 +191,7 @@ function App() {
                 case 'presence': {
                     if ('unavailable' === stanza.type) {
                         // change nick
-                        var x = stanza.getChildByAttr('code', '303', null, true),
+                        let x = stanza.getChildByAttr('code', '303', null, true),
                             item = stanza.getChildrenByFilter(
                                 function (el) {
                                     return el instanceof jabber.Element && el.getName() === 'item';
@@ -198,7 +201,7 @@ function App() {
                         ;
 
                         if (x && item) {
-                            var new_nick = item.getAttr('nick');
+                            const new_nick = item.getAttr('nick');
                             jabber_connected_users[from_jid][new_nick] = true;
                             message = from_nick + ' переименовался в ' + new_nick + '.';
                         }
@@ -239,7 +242,7 @@ function App() {
                         return;
 
                     use_nick = true;
-                    var body = stanza.getChild('body'),
+                    let body = stanza.getChild('body'),
                         x = stanza.getChild('x'),
                         delay = stanza.getChild('delay'),
                         subject = stanza.getChild('subject')
@@ -282,8 +285,8 @@ function App() {
                         }
 
                         if (subject) {
-                            var topic = (body ? body : subject).getText();
-                            PrintDebugJabber('Try to set discord topic: ', topic);
+                            const topic = (body ? body : subject).getText();
+                            LogDebugJabber('Trying to set discord topic: ', topic);
                             remDiscord.editChannel(channel, topic + '\n ~ ' + from_jid);
 
                             break;
@@ -303,17 +306,17 @@ function App() {
                 break;
             }
 
-            if (message && !message.match(/^>.+:/)) {
+            if (message) {
                 remDiscord.send(
-                     channel,
-                     (use_nick ? '**' + from_nick + '**: ' : '') + message
-                 );
+                    channel,
+                    (use_nick ? '**' + from_nick + '**: ' : '') + message
+                );
             }
         });
     };
 
-    self.getNicknameWMask = function (roomJid, fromNick) {
-        var mask = nick_mask[ roomJid ];
+    this.getNicknameWMask = function (roomJid, fromNick) {
+        const mask = nick_mask[ roomJid ];
         if (typeof mask === "string") {
             return mask.replace('%nickname%', fromNick);
         }
