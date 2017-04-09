@@ -258,7 +258,17 @@ function App() {
 
             remDiscord.send(
                 this.getChannelByJid(from_jid),
-                '**' + from_nick + '**: ' + Body.getText()
+                '**' + from_nick + '**: ' + this.escapeMarkdown(Body.getText())
+            );
+        });
+
+        ramXmpp.on('message:chat', (stanza, from_jid, from_nick, Body, has_delay) => {
+            if (!Body)
+                return;
+
+            remDiscord.send(
+                config.discord.adminId,
+                '**' + stanza.from + ':** ' + this.escapeMarkdown(Body.getText())
             );
         });
     };
@@ -284,5 +294,9 @@ function App() {
             return fromNick;
         }
     };
+
+    this.escapeMarkdown = (text) => {
+        return text.replace(/([*`~_\\])/g, '\\$1')
+    }
 }
 
