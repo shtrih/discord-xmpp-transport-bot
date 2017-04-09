@@ -252,6 +252,9 @@ function App() {
                 LogDebug('Ignore msg from ' + from_nick);
                 return;
             }
+            if (!Body) {
+                return;
+            }
 
             remDiscord.send(
                 this.getChannelByJid(from_jid),
