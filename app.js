@@ -296,6 +296,10 @@ function App() {
     };
 
     this.escapeMarkdown = (text) => {
+        // return original text if it has any URI
+        if (text.match(/[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,}/i))
+            return text;
+
         return text.replace(/([*`~_\\])/g, '\\$1')
     }
 }
