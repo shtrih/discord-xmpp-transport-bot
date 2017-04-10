@@ -229,9 +229,11 @@ function App() {
             delete jabber_connected_users[from_jid][from_nick];
             jabber_connected_users[from_jid][new_nick] = true;
 
+            Ignore.remove(from_nick).add(new_nick);
+
             remDiscord.send(
                 this.getChannelByJid(from_jid),
-                `*${from_nick} переименовался в ${new_nick}.*`
+                `*${from_nick} renamed to ${new_nick}.\n${from_nick} ignored.*`
             );
         });
 
