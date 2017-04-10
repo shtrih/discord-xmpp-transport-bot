@@ -236,7 +236,7 @@ function App() {
 
             remDiscord.send(
                 this.getChannelByJid(from_jid),
-                `*${from_nick} renamed to ${new_nick}.\n${from_nick} ignored.*`
+                `*${from_nick} renamed to ${new_nick}.\n${new_nick} ignored.*`
             );
         });
 
