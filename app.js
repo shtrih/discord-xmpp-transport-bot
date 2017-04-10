@@ -71,14 +71,17 @@ function App() {
                 remDiscord.send(channelID, "pong");
             }
             else if ("!users" === message) {
-                let reply = 'Не получила сведения о присутствии. Попробуйте повторить завтра.';
+                let reply = 'Did not receive information about the presence';
                 let ignored = Ignore.list().join(', ');
 
+                if (!jid_by_channel[channelID])
+                    reply = 'This room is not associated with any jabber conference ¯\\_(ツ)_/¯';
+
                 if ("object" === typeof(jabber_connected_users[ jid_by_channel[channelID] ]))
-                    reply = '**Участники:** ' + Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', ');
+                    reply = '**Online:** ' + Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', ');
 
                 if (ignored)
-                    reply += '\n**В игноре:** ' + ignored;
+                    reply += '\n**Ignored:** ' + ignored;
 
                 remDiscord.send(channelID, reply);
             }
@@ -185,7 +188,7 @@ function App() {
 
                 remDiscord.send(
                     this.getChannelByJid(from_jid),
-                    `*${from_nick} подключился.*`
+                    `*${from_nick} joins the room.*`
                 );
             }
         });
@@ -200,28 +203,28 @@ function App() {
             if (!Status || '303' !== Status.getAttr('code')) {
                 remDiscord.send(
                     this.getChannelByJid(from_jid),
-                    `*${from_nick} отключился.*`
+                    `*${from_nick} leaves the room.*`
                 );
             }
         });
 
         ramXmpp.on('presence:disconnect:kick', (stanza, from_jid, from_nick, Actor, Reason) => {
             const byNick = Actor ? Actor.getAttr('nick') : '',
-                reason = Reason ? Reason.getText() : 'причина не указана'
+                reason = Reason ? Reason.getText() : '<reason not specified>'
             ;
             remDiscord.send(
                 this.getChannelByJid(from_jid),
-                `*${from_nick} выгнан (${byNick}: ${reason}).*`
+                `*${from_nick} kicked (${byNick}: ${reason}).*`
             );
         });
 
         ramXmpp.on('presence:disconnect:ban', (stanza, from_jid, from_nick, Actor, Reason) => {
             const byNick = Actor ? Actor.getAttr('nick') : '',
-                reason = Reason ? Reason.getText() : 'причина не указана'
+                reason = Reason ? Reason.getText() : '<reason not specified>'
             ;
             remDiscord.send(
                 this.getChannelByJid(from_jid),
-                `*${from_nick} забанен (${byNick}: ${reason}).*`
+                `*${from_nick} banned (${byNick}: ${reason}).*`
             );
         });
 
