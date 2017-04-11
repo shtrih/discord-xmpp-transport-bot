@@ -232,10 +232,10 @@ function App() {
             delete jabber_connected_users[from_jid][from_nick];
             jabber_connected_users[from_jid][new_nick] = true;
 
-            let reply = `*${from_nick} renamed to ${new_nick}.`;
+            let reply = `*${from_nick} renamed to ${new_nick}.*`;
             if (Ignore.check(from_nick)) {
                 Ignore.remove(from_nick).add(new_nick);
-                reply += `\n${new_nick} ignored.*`
+                reply += `\n*${new_nick} ignored.*`
             }
 
             remDiscord.send(
