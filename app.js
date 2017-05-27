@@ -1,13 +1,5 @@
 "use strict";
 
-/*
- Create app: https://discordapp.com/developers/applications/me
- Invite bot to Discord: https://discordapp.com/oauth2/authorize?client_id=197985532670771200&scope=bot&permissions=19472
- Client ID: https://discordapp.com/developers/docs/topics/oauth2#adding-bots-to-guilds
- Permissions: https://discordapp.com/developers/docs/topics/permissions#bitwise-permission-flags
- See also: https://gist.github.com/powdahound/940969
- */
-
 if (!process.env.DEBUG) {
     process.env.DEBUG = 'info,error:*,-debug:*';
 }
