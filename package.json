@@ -8,6 +8,10 @@
     "start-win": "set DEBUG=info,error:*,debug:*&& node ./app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shtrih/discord-xmpp-transport-bot.git"
+  },
   "author": "shtrih",
   "license": "MIT",
   "dependencies": {
