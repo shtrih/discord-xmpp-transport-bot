@@ -1,7 +1,7 @@
 {
   "name": "discord-jabber-transport-bot",
-  "version": "2.2.0",
-  "description": "Simple transport bot between Discord channel and Jabber conference",
+  "version": "2.2.1",
+  "description": "Simple bridge bot between Discord channel and Jabber conference (XMPP MUC)",
   "main": "app.js",
   "scripts": {
     "start": "export DEBUG=info,error:*,-debug:* node app.js",
