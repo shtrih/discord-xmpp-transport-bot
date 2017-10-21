@@ -70,10 +70,10 @@ function App() {
                     reply = 'This room is not associated with any jabber conference ¯\\_(ツ)_/¯';
 
                 if ("object" === typeof(jabber_connected_users[ jid_by_channel[channelID] ]))
-                    reply = '**Online:** ' + Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', ');
+                    reply = '**Online:** ' + this.escapeMarkdown(Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', '));
 
                 if (ignored)
-                    reply += '\n**Ignored:** ' + ignored;
+                    reply += '\n**Ignored:** ' + this.escapeMarkdown(ignored);
 
                 remDiscord.send(channelID, reply);
             }
@@ -92,7 +92,7 @@ function App() {
 
                 remDiscord.send(
                     channelID,
-                    `*${nickname}* ${prefix}ignored.`
+                    this.escapeStringTemplate`*${nickname}* ${prefix}ignored.`
                 );
             }
             else if (userID !== discord.id && jid_by_channel[channelID]) {
@@ -180,7 +180,7 @@ function App() {
 
                 remDiscord.send(
                     this.getChannelByJid(from_jid),
-                    `*${from_nick} joins the room.*`
+                    this.escapeStringTemplate`*${from_nick} joins the room.*`
                 );
             }
         });
@@ -195,7 +195,7 @@ function App() {
             if (!Status || '303' !== Status.getAttr('code')) {
                 remDiscord.send(
                     this.getChannelByJid(from_jid),
-                    `*${from_nick} leaves the room.*`
+                    this.escapeStringTemplate`*${from_nick} leaves the room.*`
                 );
             }
         });
@@ -206,7 +206,7 @@ function App() {
             ;
             remDiscord.send(
                 this.getChannelByJid(from_jid),
-                `*${from_nick} kicked (${byNick}: ${reason}).*`
+                this.escapeStringTemplate`*${from_nick} kicked (${byNick}: ${reason}).*`
             );
         });
 
@@ -216,7 +216,7 @@ function App() {
             ;
             remDiscord.send(
                 this.getChannelByJid(from_jid),
-                `*${from_nick} banned (${byNick}: ${reason}).*`
+                this.escapeStringTemplate`*${from_nick} banned (${byNick}: ${reason}).*`
             );
         });
 
@@ -224,10 +224,10 @@ function App() {
             delete jabber_connected_users[from_jid][from_nick];
             jabber_connected_users[from_jid][new_nick] = true;
 
-            let reply = `*${from_nick} renamed to ${new_nick}.*`;
+            let reply = this.escapeStringTemplate`*${from_nick} renamed to ${new_nick}.*`;
             if (Ignore.check(from_nick)) {
                 Ignore.remove(from_nick).add(new_nick);
-                reply += `\n*${new_nick} ignored.*`
+                reply += this.escapeStringTemplate`\n*${new_nick} ignored.*`
             }
 
             remDiscord.send(
@@ -259,7 +259,7 @@ function App() {
 
             remDiscord.send(
                 this.getChannelByJid(from_jid),
-                '**' + from_nick + '**: ' + this.escapeMarkdown(Body.getText())
+                this.escapeStringTemplate`**${from_nick}**: ${Body.getText()}`
             );
         });
 
@@ -269,7 +269,7 @@ function App() {
 
             remDiscord.send(
                 config.discord.adminId,
-                '**' + stanza.from + ':** ' + this.escapeMarkdown(Body.getText())
+                this.escapeStringTemplate`**${stanza.from}:** ${Body.getText()}`
             );
         });
     };
@@ -302,6 +302,16 @@ function App() {
             return text;
 
         return text.replace(/([*`~_\\])/g, '\\$1')
+    };
+
+    this.escapeStringTemplate = (strings, ...keys) => {
+        let result = [strings[0]];
+
+        for (let i = 0; i < keys.length; ++i) {
+            result.push(this.escapeMarkdown(keys[i]), strings[i+1])
+        }
+
+        return result.join('');
     }
 }
 
