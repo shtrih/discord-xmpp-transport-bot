@@ -16,7 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "debug": "^2.6",
-    "discord.io": "^2.5.1",
+    "discord.io": "git+https://github.com/woor/discord.io#gateway_v6",
     "json-config": "0.0.1",
     "node-xmpp-client": "^3.2.0"
   },
