@@ -9,7 +9,7 @@
         "userPass": "pass",
         "showPresence": true,
         "reconnectIntervalSec": 600
-    }
+    },
     "roomList": [
         {
             "nick": "Yuki",
