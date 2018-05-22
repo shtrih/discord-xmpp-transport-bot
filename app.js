@@ -77,6 +77,49 @@ function App() {
 
                 remDiscord.send(channelID, reply);
             }
+            else if ("!rooms" === message) {
+                let reply = 'Room list:\n';
+
+                for (let i in jid_by_channel) {
+                    if (jid_by_channel.hasOwnProperty(i)) {
+                        reply += `\n\` ${i} ←→ ${jid_by_channel[i]}\``;
+                    }
+                }
+
+                remDiscord.send(channelID, reply);
+            }
+            else if (userID === config.discord.adminId && message.slice(0, 4) === '!say') {
+                const match = message.match(/^!say\s+([^\s]+)\s+(.*)/i);
+                let reply = 'Can\'t recognize the command!',
+                    replyToRoom = channelID
+                ;
+LogDebug(match, message);
+                if (match) {
+                    const room = match[1],
+                        msg = match[2]
+                    ;
+
+                    if (!msg) {
+                        reply += ' Looks like empty message.';
+                    }
+                    // to discord
+                    else if (room.match(/\d+/) && jid_by_channel[room]) {
+                        replyToRoom = room;
+                        reply = msg;
+                    }
+                    // to jabber
+                    else if (channel_by_jid[room]) {
+                        ramXmpp.send(room,  msg);
+
+                        return;
+                    }
+                    else {
+                        reply += ' Room not found. Try `!rooms` for room list.';
+                    }
+                }
+
+                remDiscord.send(replyToRoom, reply);
+            }
             else if (match = message.match(/^!((un)?ignore)\s+(.*)/i)) {
                 const nickname = match[3],
                     ignore = 'ignore' === match[1],
