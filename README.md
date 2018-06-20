@@ -30,3 +30,16 @@ Also you can run it in a [docker](https://docs.docker.com/) container:
 1. `cd ~/projects/discord-xmpp-transport-bot`
 2. `sudo docker run --rm -it -v $(pwd):/src:rw mkenney/npm:node-7.7-alpine "npm install"`
 3. `sudo docker run --rm -it -v $(pwd):/src:ro mkenney/npm:node-7.7-alpine "npm run start-debug"`
+
+# Bot commands
+
+All commands works only from discord side. Bot answers visible only in discord.
+
+|Command|Description|Where works|
+|---|---|---|
+|`!ping`|Answers «pong».|Direct Message, Room|
+|`!say <room> Text`|Say something behalf of bot. You can use jabber conference or discord room ID as <room> parameter (see `!rooms` command). This command only works for bot admin (adminId in config file)|DM, Room|
+|`!users`|Show users from linked jabber conference. Also show who is ignored by `!ignore` command|Room|
+|`!rooms`|Show linked jabber conferences|DM, Room|
+|`!ignore JabberUsername`|Ignore user from jabber by nickname. If he change nickname → he will be ignored with new nickname.|Room|
+|`!unignore JabberUsername`|Stop ingnoring some user|Room|
