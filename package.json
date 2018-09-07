@@ -19,7 +19,8 @@
     "debug": "^2.6",
     "discord.io": "git+https://github.com/woor/discord.io#gateway_v6",
     "json-config": "0.0.1",
-    "node-xmpp-client": "^3.2.0"
+    "node-xmpp-client": "^3.2.0",
+    "discord.js": "^11.4"
   },
   "engines": {
     "node": ">=7.7.1"

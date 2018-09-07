@@ -300,9 +300,10 @@ LogDebug(match, message);
                 return;
             }
 
-            remDiscord.send(
+            remDiscord.sendAs(
+                from_nick + '*',
                 this.getChannelByJid(from_jid),
-                this.escapeStringTemplate`**${from_nick}**: ${Body.getText()}`
+                Body.getText()
             );
         });
 
