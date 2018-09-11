@@ -22,7 +22,7 @@ new App().run();
 
 function App() {
     const
-        remDiscord = new Discord(config.discord.token, true),
+        remDiscord = new Discord(config.discord.token),
         discord = remDiscord.getClient(),
         ramXmpp = new Xmpp(config.jabber.userJid, config.jabber.userPass),
         jabber = ramXmpp.getClient(),
@@ -193,10 +193,10 @@ function App() {
             LogErrorJabber(e);
 
             if (config.discord.adminId) {
-                remDiscord.send(
+                remDiscord.sendDM(
                     config.discord.adminId,
                     '**[Jabber error]** `' + e + '`'
-                );
+                ).catch(LogError);
             }
         });
 
@@ -317,10 +317,10 @@ function App() {
             if (!Body)
                 return;
 
-            remDiscord.send(
+            remDiscord.sendDM(
                 config.discord.adminId,
                 this.escapeStringTemplate`**${stanza.from}:** ${Body.getText()}`
-            );
+            ).catch(LogError);
         });
     };
 
