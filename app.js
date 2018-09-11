@@ -134,7 +134,12 @@ function App() {
                     this.escapeStringTemplate`*${nickname}* ${prefix}ignored.`
                 );
             }
-            else if (/*message.author.bot*/ message.author.id !== discord.user.id && jid_by_channel[message.channel.id]) {
+            else if (
+                // !message.author.bot
+                !message.webhookID // preventing duplicates, since we use webhook to send messages from jabber
+                && message.author.id !== discord.user.id
+                && jid_by_channel[message.channel.id]
+            ) {
                 remDiscord.fixMessage('<@!'+ message.author.id +'>', message).then((userNick) => {
                     if ('@null' === userNick || '@undefined' === userNick) {
                         userNick = '@' + message.author.username;
@@ -150,7 +155,7 @@ function App() {
                             + attachments
                         );
                     });
-                });
+                }).catch(LogError);
             }
         });
 
@@ -303,7 +308,7 @@ function App() {
 
             const toChannel = this.getChannelByJid(from_jid);
             remDiscord.sendAs(
-                from_nick + '*',
+                from_nick,
                 toChannel,
                 Body.getText()
             ).catch((error) => {
