@@ -11,8 +11,12 @@ You can join several conferences on one bot instance.
 
 # Adding Bot to Discord Guild
  1. You need to [create an application](https://discordapp.com/developers/docs/topics/oauth2#bots) on [My Apps](https://discordapp.com/developers/applications/me) page.
- 2. Create an invitation URL as decribed on [this page](https://discordapp.com/developers/docs/topics/oauth2#bot-authorization-flow).
- Bot requires 3 [permissions](https://discordapp.com/developers/docs/topics/permissions): `READ_MESSAGES`, `SEND_MESSAGES`, `EMBED_LINKS`. For now roles decimal value is `80896`.
+ 2. Create an invitation URL as decribed on [this page](https://discordapp.com/developers/docs/topics/oauth2#bot-authorization-flow). 
+ For ease of use, it is recommended to use [this website](https://discordapi.com/permissions.html#536890368).
+ 
+ Bot requires 3 [permissions](https://discordapp.com/developers/docs/topics/permissions): `READ_MESSAGES`, `SEND_MESSAGES`, `EMBED_LINKS`. For now roles decimal value is `19456`.
+
+ Also optional permission is `MANAGE_WEBHOOKS` (requires 2FA). Set it if you want to bot send messages to discord on behalf of jabber user nickname.
 
 # Debugging
 Set environment variable `DEBUG` to values according to [documentation](https://github.com/visionmedia/debug/blob/master/README.md): 
