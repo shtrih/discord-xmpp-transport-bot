@@ -141,13 +141,13 @@ function App() {
                     }
                     userNick = this.getNicknameWMask(jid_by_channel[message.channel.id], userNick);
 
-                    // const attachments = remDiscord.getAttachments(event);
+                    const attachments = remDiscord.getAttachmentsLinks(message);
 
                     remDiscord.fixMessage(message.content, message).then((msg) => {
                         ramXmpp.send(jid_by_channel[message.channel.id],
                             userNick
                             + msg
-                            //+ attachments
+                            + attachments
                         );
                     });
                 });
