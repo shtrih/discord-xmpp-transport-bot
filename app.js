@@ -40,44 +40,40 @@ function App() {
 
     this.run = () => {
         discord.on('ready', () => {
-            LogInfo('Connected to discord as ' + discord.username + " - (" + discord.id + ")");
+            LogInfo('Connected to discord as ' + discord.user.username + " - (" + discord.user.id + ")");
         });
 
-        discord.on('disconnect', (message, code) => {
-            if (code) {
-                remDiscord.logError({'code': code, 'message': message});
-            }
-            else {
-                remDiscord.logDebug({'code': code, 'message': message});
-            }
+        discord.on('disconnect', (closeEvent) => {
+            remDiscord.logError(closeEvent);
             setTimeout(discord.connect, 10000)
         });
 
         // debug all discord.io events
         discord.on('debug', remDiscord.logDebug);
 
-        discord.on('message', (fromNickname, userID, channelID, message, event) => {
+        discord.on('message', (message) => {
             let match;
 
-            if ("!ping" === message) {
-                remDiscord.send(channelID, "pong");
+            if ("!ping" === message.content) {
+                // remDiscord.send(message.channel.id, 'pong');
+                message.channel.send('pong');
             }
-            else if ("!users" === message) {
+            else if ("!users" === message.content) {
                 let reply = 'Did not receive information about the presence';
                 let ignored = Ignore.list().join(', ');
 
-                if (!jid_by_channel[channelID])
+                if (!jid_by_channel[message.channel.id])
                     reply = 'This room is not associated with any jabber conference ¯\\_(ツ)_/¯';
 
-                if ("object" === typeof(jabber_connected_users[ jid_by_channel[channelID] ]))
-                    reply = '**Online:** ' + this.escapeMarkdown(Object.keys(jabber_connected_users[ jid_by_channel[channelID] ]).join(', '));
+                if ("object" === typeof(jabber_connected_users[ jid_by_channel[message.channel.id] ]))
+                    reply = '**Online:** ' + this.escapeMarkdown(Object.keys(jabber_connected_users[ jid_by_channel[message.channel.id] ]).join(', '));
 
                 if (ignored)
                     reply += '\n**Ignored:** ' + this.escapeMarkdown(ignored);
 
-                remDiscord.send(channelID, reply);
+                remDiscord.send(message.channel.id, reply);
             }
-            else if ("!rooms" === message) {
+            else if ("!rooms" === message.content) {
                 let reply = 'Room list:\n';
 
                 for (let i in jid_by_channel) {
@@ -86,21 +82,21 @@ function App() {
                     }
                 }
 
-                remDiscord.send(channelID, reply);
+                remDiscord.send(message.channel.id, reply);
             }
-            else if (userID === config.discord.adminId && message.slice(0, 4) === '!say') {
-                const match = message.match(/^!say\s+([^\s]+)\s+(.*)/i);
+            else if (message.author.id === config.discord.adminId && message.content.slice(0, 4) === '!say') {
+                const match = message.content.match(/^!say\s+([^\s]+)\s+(.*)/i);
                 let reply = 'Can\'t recognize the command!',
-                    replyToRoom = channelID
+                    replyToRoom = message.channel.id
                 ;
-LogDebug(match, message);
+
                 if (match) {
                     const room = match[1],
                         msg = match[2]
                     ;
 
                     if (!msg) {
-                        reply += ' Looks like empty message.';
+                        reply += ' Looks like empty message.content.';
                     }
                     // to discord
                     else if (room.match(/\d+/) && jid_by_channel[room]) {
@@ -120,7 +116,7 @@ LogDebug(match, message);
 
                 remDiscord.send(replyToRoom, reply);
             }
-            else if (match = message.match(/^!((un)?ignore)\s+(.*)/i)) {
+            else if (match = message.content.match(/^!((un)?ignore)\s+(.*)/i)) {
                 const nickname = match[3],
                     ignore = 'ignore' === match[1],
                     prefix = ignore ? '' : 'un'
@@ -134,22 +130,27 @@ LogDebug(match, message);
                 }
 
                 remDiscord.send(
-                    channelID,
+                    message.channel.id,
                     this.escapeStringTemplate`*${nickname}* ${prefix}ignored.`
                 );
             }
-            else if (userID !== discord.id && jid_by_channel[channelID]) {
-                let userNick = remDiscord.fixMessage('<@!'+ userID +'>');
+            else if (/*message.author.bot*/ message.author.id !== discord.user.id && jid_by_channel[message.channel.id]) {
+                remDiscord.fixMessage('<@!'+ message.author.id +'>', message).then((userNick) => {
+                    if ('@null' === userNick || '@undefined' === userNick) {
+                        userNick = '@' + message.author.username;
+                    }
+                    userNick = this.getNicknameWMask(jid_by_channel[message.channel.id], userNick);
 
-                if ('@null' === userNick || '@undefined' === userNick) {
-                    userNick = '@' + fromNickname;
-                }
-                userNick = this.getNicknameWMask(jid_by_channel[channelID], userNick);
+                    // const attachments = remDiscord.getAttachments(event);
 
-                const attachments = remDiscord.getAttachments(event);
-                message = remDiscord.fixMessage(message);
-
-                ramXmpp.send(jid_by_channel[channelID], userNick + message + attachments);
+                    remDiscord.fixMessage(message.content, message).then((msg) => {
+                        ramXmpp.send(jid_by_channel[message.channel.id],
+                            userNick
+                            + msg
+                            //+ attachments
+                        );
+                    });
+                });
             }
         });
 
@@ -282,7 +283,7 @@ LogDebug(match, message);
         ramXmpp.on('message:groupchat:subject', (stanza, from_jid, from_nick, Subject, has_delay) => {
             const topic = Subject.getText();
             LogInfo('Trying to set discord topic: ', topic);
-            remDiscord.editChannel(this.getChannelByJid(from_jid), topic + '\n ~ ' + from_jid);
+            remDiscord.editChannel(this.getChannelByJid(from_jid), topic + '\n ~ ' + from_jid, from_nick);
         });
 
         ramXmpp.on('message:groupchat', (stanza, from_jid, from_nick, Body, has_delay) => {
@@ -300,11 +301,16 @@ LogDebug(match, message);
                 return;
             }
 
+            const toChannel = this.getChannelByJid(from_jid);
             remDiscord.sendAs(
                 from_nick + '*',
-                this.getChannelByJid(from_jid),
+                toChannel,
                 Body.getText()
-            );
+            ).catch((error) => {
+                LogError(error);
+
+                return remDiscord.send(toChannel, this.escapeStringTemplate`**${from_nick}**: ${Body.getText()}`);
+            });
         });
 
         ramXmpp.on('message:chat', (stanza, from_jid, from_nick, Body, has_delay) => {
