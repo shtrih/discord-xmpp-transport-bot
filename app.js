@@ -327,6 +327,16 @@ function App() {
                 this.escapeStringTemplate`**${stanza.from}:** ${Body.getText()}`
             ).catch(LogError);
         });
+
+        ramXmpp.on('message:captcha', (stanza, from_jid, from_nick, Body) => {
+            if (!Body)
+                return;
+
+            remDiscord.sendDM(
+                config.discord.adminId,
+                this.escapeStringTemplate`**${stanza.from}:** ${Body.getText()}`
+            ).catch(LogError);
+        });
     };
 
     this.getChannelByJid = (conferenceJID) => {
