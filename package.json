@@ -1,6 +1,6 @@
 {
   "name": "discord-jabber-transport-bot",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Simple bridge bot between Discord channel and Jabber conference (XMPP MUC)",
   "main": "app.js",
   "scripts": {
