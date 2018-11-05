@@ -159,7 +159,9 @@ function App() {
             }
         });
 
-        discord.on('error', remDiscord.logError);
+        discord.on('error', (error) => {
+            remDiscord.logError({clientStatus: discord.status, message: error.message})
+        });
 
         jabber.on('online', function () {
             LogInfo('Connected to jabber as ' + config.jabber.userJid);
