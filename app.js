@@ -159,6 +159,8 @@ function App() {
             }
         });
 
+        discord.on('error', remDiscord.logError);
+
         jabber.on('online', function () {
             LogInfo('Connected to jabber as ' + config.jabber.userJid);
 
