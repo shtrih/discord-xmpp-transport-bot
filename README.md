@@ -8,6 +8,7 @@ You can join several conferences on one bot instance.
  - `cp local.json.sample local.json` — create configuration file. Create `production.json` for deployment.
  - Edit configuration files. See section `Adding Bot to Guild`.
  - `nodejs ./app.js` or `npm start` — start application.
+ - Type `!ping` in discord channel to check "pong" answer.
 
 # Adding Bot to Discord Guild
  1. You need to [create an application](https://discordapp.com/developers/docs/topics/oauth2#bots) on [My Apps](https://discordapp.com/developers/applications/me) page.
