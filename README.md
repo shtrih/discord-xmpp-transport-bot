@@ -44,7 +44,7 @@ All commands works only from discord side. Bot answers visible only in discord.
 |---|---|---|
 |`!ping`|Answers «pong».|Direct Message, Room|
 |`!say <room> Text`|Say something behalf of bot. You can use jabber conference or discord room ID as <room> parameter (see `!rooms` command). This command only works for bot admin (adminId in config file)|DM, Room|
-|`!users`|Show users from linked jabber conference. Also show who is ignored by `!ignore` command|Room|
 |`!rooms`|Show linked jabber conferences|DM, Room|
+|`!users`|Show users from linked jabber conference. Also show who is ignored by `!ignore` command|Room|
 |`!ignore JabberUsername`|Ignore user from jabber by nickname. If he change nickname → he will be ignored with new nickname.|Room|
 |`!unignore JabberUsername`|Stop ingnoring some user|Room|
