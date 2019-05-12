@@ -6,7 +6,7 @@ You can join several conferences on one bot instance.
  - You need a working installation of [Node.js](https://nodejs.org) (version >= 7.7.1) on the machine this bot will run on. `npm` is installed with Node.js.
  - `npm install` — install dependencies.
  - `cp local.json.sample local.json` — create configuration file. Create `production.json` for deployment.
- - Edit configuration files. See section `Adding Bot to Guild`.
+ - Edit configuration files. See section [Adding Bot to Discord Guild](https://github.com/shtrih/discord-xmpp-transport-bot#adding-bot-to-discord-guild) below.
  - `nodejs ./app.js` or `npm start` — start application.
  - Type `!ping` in discord channel to check "pong" answer.
 
