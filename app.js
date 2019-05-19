@@ -35,7 +35,10 @@ function App() {
         nick_by_jid = {},
         nick_mask = {},
         show_presence_by_jid = {},
-        jabber_connected_users = {}
+        jabber_connected_users = {},
+        last_error_stanza = null,
+        last_error_count_message = null,
+        error_stanzas_count = null
     ;
 
     this.run = () => {
@@ -217,10 +220,44 @@ function App() {
         });
 
         ramXmpp.on('stanza:error', (stanza, from_jid) => {
+            const error_count_text = 'Error thrown times: ';
+
+            // If the same as the previous error then just update message counter
+            if (last_error_stanza && last_error_stanza.toString() === stanza.toString()) {
+                ++error_stanzas_count;
+
+                /** @see https://discord.js.org/#/docs/main/stable/class/Message?scrollTo=edit */
+                last_error_count_message
+                    .edit(error_count_text + error_stanzas_count)
+                    .catch(LogError);
+
+                return;
+            }
+
+            error_stanzas_count = 1;
+
             remDiscord.send(
                 this.getChannelByJid(from_jid),
                 '**[stanza:error]** ```' + stanza + '```'
-            );
+            ).then(() => {
+                    last_error_stanza = stanza;
+
+                    remDiscord
+                        .send(
+                            this.getChannelByJid(from_jid),
+                            error_count_text + error_stanzas_count
+                        )
+                        .then(
+                            /**
+                             * @param {Object|Message} message
+                             * @see https://discord.js.org/#/docs/main/stable/class/Message */
+                            message => {
+                                last_error_count_message = message;
+                            }
+                        )
+                    ;
+                }
+            ).catch(LogError);
         });
 
         ramXmpp.on('presence:connect', (stanza, from_jid, from_nick) => {
@@ -300,6 +337,8 @@ function App() {
         });
 
         ramXmpp.on('message:groupchat', (stanza, from_jid, from_nick, Body, has_delay) => {
+            last_error_stanza = null;
+
             if (has_delay) {
                 return;
             }
