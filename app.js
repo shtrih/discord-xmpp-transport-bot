@@ -62,14 +62,17 @@ function App() {
                 let reply = 'Did not receive information about the presence';
                 let ignored = Ignore.list().join(', ');
 
-                if (!jid_by_channel[message.channel.id])
+                if (!jid_by_channel[message.channel.id]) {
                     reply = 'This room is not associated with any jabber conference ¯\\_(ツ)_/¯';
+                }
 
-                if ("object" === typeof(jabber_connected_users[ jid_by_channel[message.channel.id] ]))
-                    reply = '**Online:** ' + this.escapeMarkdown(Object.keys(jabber_connected_users[ jid_by_channel[message.channel.id] ]).join(', '));
+                if ("object" === typeof(jabber_connected_users[jid_by_channel[message.channel.id]])) {
+                    reply = '**Online:** ' + this.escapeMarkdown(Object.keys(jabber_connected_users[jid_by_channel[message.channel.id]]).join(', '));
+                }
 
-                if (ignored)
+                if (ignored) {
                     reply += '\n**Ignored:** ' + this.escapeMarkdown(ignored);
+                }
 
                 remDiscord.send(message.channel.id, reply);
             }
@@ -105,7 +108,7 @@ function App() {
                     }
                     // to jabber
                     else if (channel_by_jid[room]) {
-                        ramXmpp.send(room,  msg);
+                        ramXmpp.send(room, msg);
 
                         return;
                     }
@@ -140,7 +143,7 @@ function App() {
                 && message.author.id !== discord.user.id
                 && jid_by_channel[message.channel.id]
             ) {
-                remDiscord.fixMessage('<@!'+ message.author.id +'>', message).then((userNick) => {
+                remDiscord.fixMessage('<@!' + message.author.id + '>', message).then((userNick) => {
                     if ('@null' === userNick || '@undefined' === userNick) {
                         userNick = '@' + message.author.username;
                     }
@@ -166,7 +169,7 @@ function App() {
         jabber.on('online', function () {
             LogInfo('Connected to jabber as ' + config.jabber.userJid);
 
-            for (let i = 0 ; i < config.roomList.length; i++) {
+            for (let i = 0; i < config.roomList.length; i++) {
                 LogInfo('Connecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
                 ramXmpp.join(config.roomList[i].roomJid, config.roomList[i].nick);
 
@@ -179,7 +182,7 @@ function App() {
 
             // TODO: handle disconnect events by status codes (http://xmpp.org/extensions/xep-0045.html#registrar-statuscodes)
             conferenceSendPresenceInterval = setInterval(function () {
-                for (let i = 0 ; i < config.roomList.length; i++) {
+                for (let i = 0; i < config.roomList.length; i++) {
                     LogInfo('Reconnecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
                     ramXmpp.join(config.roomList[i].roomJid, config.roomList[i].nick);
                 }
@@ -221,8 +224,9 @@ function App() {
         });
 
         ramXmpp.on('presence:connect', (stanza, from_jid, from_nick) => {
-            if (!jabber_connected_users[from_jid])
+            if (!jabber_connected_users[from_jid]) {
                 jabber_connected_users[from_jid] = {};
+            }
 
             if (!jabber_connected_users[from_jid][from_nick]) {
                 jabber_connected_users[from_jid][from_nick] = true;
@@ -322,9 +326,10 @@ function App() {
             });
         });
 
-        ramXmpp.on('message:chat', (stanza, from_jid, from_nick, Body, has_delay) => {
-            if (!Body)
+        ramXmpp.on('message:chat', (stanza, from_jid, from_nick, Body) => {
+            if (!Body) {
                 return;
+            }
 
             remDiscord.sendDM(
                 config.discord.adminId,
@@ -333,8 +338,9 @@ function App() {
         });
 
         ramXmpp.on('message:captcha', (stanza, from_jid, from_nick, Body) => {
-            if (!Body)
+            if (!Body) {
                 return;
+            }
 
             remDiscord.sendDM(
                 config.discord.adminId,
@@ -367,8 +373,9 @@ function App() {
 
     this.escapeMarkdown = (text) => {
         // return original text if it has any URI
-        if (text.match(/[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,}/i))
+        if (text.match(/[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,}/i)) {
             return text;
+        }
 
         return text.replace(/([*`~_\\])/g, '\\$1')
     };
@@ -377,7 +384,7 @@ function App() {
         let result = [strings[0]];
 
         for (let i = 0; i < keys.length; ++i) {
-            result.push(this.escapeMarkdown(keys[i]), strings[i+1])
+            result.push(this.escapeMarkdown(keys[i]), strings[i + 1])
         }
 
         return result.join('');
