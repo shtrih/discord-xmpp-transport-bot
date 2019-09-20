@@ -5,7 +5,7 @@ You can join several conferences on one bot instance.
 # How to start
  - You need a working installation of [Node.js](https://nodejs.org) (version >= 7.7.1) on the machine this bot will run on. `npm` is installed with Node.js.
  - `npm install` — install dependencies.
- - `cp local.json.sample local.json` — create configuration file. Create `production.json` for deployment.
+ - `cp local.cjson.sample local.cjson` — create configuration file. Create `production.cjson` for production mode (`NODE_ENV=production`).
  - Edit configuration files. See section `Adding Bot to Discord Guild` below.
  - `nodejs ./app.js` or `npm start` — start application.
  - Type `!ping` in discord channel to check "pong" answer.

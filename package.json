@@ -1,6 +1,6 @@
 {
   "name": "discord-jabber-transport-bot",
-  "version": "3.2.1",
+  "version": "4.0.0",
   "description": "Simple bridge bot between Discord channel and Jabber conference (XMPP MUC)",
   "main": "app.js",
   "scripts": {
@@ -16,10 +16,10 @@
   "author": "shtrih",
   "license": "MIT",
   "dependencies": {
+    "cjson": "^0.5",
     "debug": "^4.1",
-    "json-config": "0.0.1",
-    "node-xmpp-client": "^3.2.0",
-    "discord.js": "^11.5.1"
+    "discord.js": "^11.5.1",
+    "node-xmpp-client": "^3.2.0"
   },
   "engines": {
     "node": ">=7.7.1"

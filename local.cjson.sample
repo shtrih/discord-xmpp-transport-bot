@@ -1,24 +1,45 @@
 {
     "discord": {
+        /**
+         * CLIENT SECRET from Application page (https://discordapp.com/developers/applications/)
+         */
         "token": "",
+
+        /**
+         * ID of the user who will be the Administrator.
+         * The bot sends jabber errors via DM, jabber captcha message, DM from jabber conferences.
+         */
         "adminId": "000000000000000000"
     },
     "jabber": {
         "userJid": "user@jabber.org",
         "userPass": "pass",
+
+        // Show message on user connect/leave room. Can be overridden in every room
         "showPresence": true,
         "reconnectIntervalSec": 600
     },
+    /**
+     * Array of rooms connections
+     */
     "roomList": [
         {
             "nick": "Yuki",
+            // Discord channel ID
             "roomChannelId": "000000000000000000",
             "roomJid": "some-conf@conference.jabber.org",
+
+            /**
+             * For example:
+             *    "<%nickname%>: "
+             *    ""
+             *    "%nickname%: "
+             */
             "fromNickMask": "from %nickname%: ",
             "showPresence": false
         },
         {
-            "nick": "Yuki",
+            "nick": "Yukari",
             "roomChannelId": "000000000000000000",
             "roomJid": "another-conf@conference.jabber.org",
             "fromNickMask": "<%nickname%>: "
