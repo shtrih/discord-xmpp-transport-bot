@@ -337,11 +337,13 @@ function App() {
         });
 
         ramXmpp.on('message:groupchat', (stanza, from_jid, from_nick, Body, has_delay) => {
-            last_error_stanza = null;
-
             if (has_delay) {
                 return;
             }
+
+            // Reset latest error on receive normal message
+            last_error_stanza = null;
+
             if (from_nick === nick_by_jid[from_jid]) {
                 return;
             }
