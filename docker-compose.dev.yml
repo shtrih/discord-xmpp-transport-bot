@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  node:
+    restart: "no"
+    environment:
+      - NODE_ENV=local
+      - DEBUG=info,error:*,debug:*
