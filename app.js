@@ -13,7 +13,7 @@ const Discord = require('./lib/RemDiscord.js'),
     LogDebugJabber = debug('debug:jabber'),
     LogErrorJabber = debug('error:jabber'),
     cjson = require('cjson'),
-    config = cjson.load(`./${process.env.NODE_ENV || 'local'}.cjson`),
+    config = cjson.load(`./config/${process.env.NODE_ENV || 'development'}.cjson`),
     List = require('./lib/List.js')
 ;
 
