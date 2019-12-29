@@ -4,10 +4,10 @@ You can join several conferences on one bot instance.
 
 # How to start
  - You need a working installation of [Node.js](https://nodejs.org) (version >= 7.7.1) on the machine this bot will run on. `npm` is installed with Node.js.
- - `npm install` — install dependencies.
- - `cp local.cjson.sample local.cjson` — create configuration file. Create `production.cjson` for production mode (`NODE_ENV=production`).
+ - Install dependencies: `npm install`.
+ - Create configuration file: `cp config/development.cjson.sample config/development.cjson`. Create `production.cjson` for production mode (`NODE_ENV=production`).
  - Edit configuration files. See section `Adding Bot to Discord Guild` below.
- - `nodejs ./app.js` or `npm start` — start application.
+ - Start application: `nodejs ./app.js` or `npm start`.
  - Type `!ping` in discord channel to check "pong" answer.
 
 # Adding Bot to Discord Guild
@@ -35,6 +35,14 @@ Also you can run it in a [docker](https://docs.docker.com/) container:
 1. `cd ~/projects/discord-xmpp-transport-bot`
 2. `sudo docker run --rm -it -v $(pwd):/src:rw mkenney/npm:node-7.7-alpine "npm install"`
 3. `sudo docker run --rm -it -v $(pwd):/src:ro mkenney/npm:node-7.7-alpine "npm run start-debug"`
+
+Or use Dockerfile:
+1. Build the image: `sudo docker build -t discord-xmpp-transport-image .`
+2. Run the container: `sudo docker run -it --rm --name dscrd-xmpp-brdg -e NODE_ENV=production -e DEBUG=info,error:*,debug:* discord-xmpp-transport-image`
+
+Run using docker-compose:
+* Development mode: `sudo docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build`
+* Production mode: `sudo docker-compose up --build -d`
 
 # Bot commands
 
