@@ -4,5 +4,5 @@ services:
   node:
     restart: "no"
     environment:
-      - NODE_ENV=local
+      - NODE_ENV=development
       - DEBUG=info,error:*,debug:*
