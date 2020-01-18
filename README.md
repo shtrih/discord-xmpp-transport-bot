@@ -15,9 +15,10 @@ You can join several conferences on one bot instance.
  2. Create an invitation URL as described on [this page](https://discordapp.com/developers/docs/topics/oauth2#bot-authorization-flow). 
  For ease of use, it is recommended to use [this website](https://discordapi.com/permissions.html#536890368).
  
- Bot requires 3 [permissions](https://discordapp.com/developers/docs/topics/permissions): `READ_MESSAGES`, `SEND_MESSAGES`, `EMBED_LINKS`. For now roles decimal value is `19456`.
+    Bot requires 3 [permissions](https://discordapp.com/developers/docs/topics/permissions): `READ_MESSAGES`, `SEND_MESSAGES`, `EMBED_LINKS`. For now roles decimal value is `19456`.
 
- Also, optional permission is `MANAGE_WEBHOOKS` (requires 2FA). Set it if you want to bot send messages to discord on behalf of jabber user nickname.
+    Also, optional permission is `MANAGE_WEBHOOKS` (requires [Two-Factor Authentication](https://support.discordapp.com/hc/en-us/articles/219576828-Setting-up-Two-Factor-Authentication)). Set it if you want to bot send messages to discord on behalf of jabber user nickname.
+ 3. You need to navigate to this URL, you'll be prompted to add the bot to a guild in which you have proper permissions. On acceptance, the bot will be added.
 
 # Debugging
 Set environment variable `DEBUG` to values according to [documentation](https://github.com/visionmedia/debug/blob/master/README.md): 
