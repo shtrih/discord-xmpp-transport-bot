@@ -21,15 +21,13 @@ You can join several conferences on one bot instance.
  3. You need to navigate to this URL, you'll be prompted to add the bot to a guild in which you have proper permissions. On acceptance, the bot will be added.
 
 # Debugging
-Set environment variable `DEBUG` to values according to [documentation](https://github.com/visionmedia/debug/blob/master/README.md): 
- - `info`
- - `error`
- - `debug:jabber`
- - `debug:discord`
+Set environment variable `DEBUG` to values according to [`debug` package documentation](https://github.com/visionmedia/debug/blob/master/README.md). This application uses values: `info`, `info:app`, `info:jabber`, `error`, `error:app`, `error:discord`, `debug:app`, `debug:jabber`, `debug:discord`.
 
 For example, run in Linux terminal: 
  - `$> export DEBUG=info,error,debug:discord,debug:discord,-xmpp:client`
  - `$> nodejs app.js`
+
+If `DEBUG` is not set then it sets to `log all except debug` settings: [app.js#L3-L5](https://github.com/shtrih/discord-xmpp-transport-bot/blob/master/app.js#L3-L5).
 
 # Docker
 Also you can run it in a [docker](https://docs.docker.com/) container:
