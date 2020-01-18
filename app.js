@@ -1,7 +1,7 @@
 "use strict";
 
 if (!process.env.DEBUG) {
-    process.env.DEBUG = 'info,error:*,-debug:*';
+    process.env.DEBUG = '*,-debug:*,-xmpp:*';
 }
 
 const Discord = require('./lib/RemDiscord.js'),
