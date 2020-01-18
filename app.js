@@ -23,9 +23,8 @@ function App() {
     const
         remDiscord = new Discord(config.discord.token),
         discord = remDiscord.getClient(),
-        ramXmpp = new Xmpp(config.jabber.userJid, config.jabber.userPass),
-        jabber = ramXmpp.getClient(),
-        Ignore = new List()
+        Ignore = new List(),
+        reconnectTimeoutSec = 10
     ;
     let
         conferenceSendPresenceInterval,
@@ -37,20 +36,29 @@ function App() {
         jabber_connected_users = {},
         last_error_stanza = null,
         last_error_count_message = null,
-        error_stanzas_count = null
+        error_stanzas_count = null,
+        ramXmpp = null,
+        jabber = null
     ;
 
     this.run = () => {
         discord.on('ready', () => {
             LogInfo('Connected to discord as ' + discord.user.username + " - (" + discord.user.id + ")");
+
+            ramXmpp = new Xmpp(config.jabber.userJid, config.jabber.userPass);
+            jabber = ramXmpp.getClient();
+
+            this.registerXMPPListeners();
         });
 
         discord.on('disconnect', (closeEvent) => {
             remDiscord.logError(closeEvent);
-            setTimeout(discord.connect, 10000)
+            LogInfo(`Trying to reconnect to Discord after ${reconnectTimeoutSec} sec`);
+
+            setTimeout(remDiscord.connect, reconnectTimeoutSec * 1000)
         });
 
-        // debug all discord.io events
+        // debug all Discord events
         discord.on('debug', remDiscord.logDebug);
 
         discord.on('message', (message) => {
@@ -167,7 +175,9 @@ function App() {
         discord.on('error', (error) => {
             remDiscord.logError({clientStatus: discord.status, message: error.message})
         });
+    };
 
+    this.registerXMPPListeners = () => {
         jabber.on('online', function () {
             LogInfo('Connected to jabber as ' + config.jabber.userJid);
 
@@ -200,17 +210,35 @@ function App() {
             jabber_connected_users = {};
             clearInterval(conferenceSendPresenceInterval);
 
-            setTimeout(jabber.connect, 10000)
+            LogInfo(`Trying to reconnect to Jabber after ${reconnectTimeoutSec} sec`);
+            setTimeout(jabber.connect, reconnectTimeoutSec * 1000)
         });
 
         jabber.on('error', function (e) {
+            const terminate = e === 'XMPP authentication failure';
+
             LogErrorJabber(e);
 
             if (config.discord.adminId) {
                 remDiscord.sendDM(
                     config.discord.adminId,
                     '**[Jabber error]** `' + e + '`'
-                ).catch(LogError);
+                )
+                    .then(() => {
+                        if (terminate) {
+                            process.kill(process.pid, 'SIGTERM');
+                        }
+                    })
+                    .catch((error) => {
+                        LogError(error);
+
+                        if (terminate) {
+                            process.kill(process.pid, 'SIGTERM');
+                        }
+                    });
+            }
+            else if (terminate) {
+                process.kill(process.pid, 'SIGTERM');
             }
         });
 
@@ -331,7 +359,7 @@ function App() {
 
         ramXmpp.on('message:groupchat:subject', (stanza, from_jid, from_nick, Subject, has_delay) => {
             const topic = Subject.getText();
-            LogInfo('Trying to set discord topic: ', topic);
+            LogInfo('Trying to set Discord topic: ', topic);
             remDiscord.editChannel(this.getChannelByJid(from_jid), topic + '\n ~ ' + from_jid, from_nick);
         });
 
