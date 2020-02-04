@@ -87,11 +87,13 @@ function App() {
                 remDiscord.send(message.channel.id, reply);
             }
             else if ("!rooms" === message.content) {
-                let reply = 'Room list:\n';
+                let reply = 'Room list:';
+                let channel;
 
                 for (let i in jid_by_channel) {
                     if (jid_by_channel.hasOwnProperty(i)) {
-                        reply += `\n\` ${i} ←→ ${jid_by_channel[i]}\``;
+                        channel = discord.channels.get(i);
+                        reply += `\n\` "${channel.guild.name}" #${channel.name} (${i}) ←→ ${jid_by_channel[i]}\``;
                     }
                 }
 
