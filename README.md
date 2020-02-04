@@ -24,8 +24,8 @@ You can join several conferences on one bot instance.
 Set environment variable `DEBUG` to values according to [`debug` package documentation](https://github.com/visionmedia/debug/blob/master/README.md). This application uses values: `info`, `info:app`, `info:jabber`, `error`, `error:app`, `error:discord`, `debug:app`, `debug:jabber`, `debug:discord`.
 
 For example, run in Linux terminal: 
- - `$> export DEBUG=info,error,debug:discord,debug:discord,-xmpp:client`
- - `$> nodejs app.js`
+ - `$> export DEBUG=info,error,debug:discord,-xmpp:client`
+ - `$> node app.js`
 
 If `DEBUG` is not set then it sets to `log all except debug` settings: [app.js#L3-L5](https://github.com/shtrih/discord-xmpp-transport-bot/blob/master/app.js#L3-L5).
 
@@ -50,7 +50,7 @@ All commands work only from discord side. The bot answers visible only in discor
 |Command|Description|Where works|
 |---|---|---|
 |`!ping`|Answers «pong».|Direct Message, Room|
-|`!say <room> Text`|Say something behalf of the bot. You can use jabber conference or discord room ID as <room> parameter (see `!rooms` command). This command only works for bot admin (adminId in the config file)|DM, Room|
+|`!say <room> Text`|Say something behalf of the bot. You can use jabber conference or discord room ID as <room> parameter (see `!rooms` command). This command only works for bot admin (`adminId` in the config file)|DM, Room|
 |`!rooms`|Show linked jabber conferences|DM, Room|
 |`!users`|Show users from linked jabber conference. Also, show who is ignored by `!ignore` command|Room|
 |`!ignore JabberUsername`|Ignore user from jabber by a nickname. If he changes nickname → he will be ignored with a new nickname.|Room|
