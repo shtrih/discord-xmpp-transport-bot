@@ -213,7 +213,7 @@ function App() {
             clearInterval(conferenceSendPresenceInterval);
 
             LogInfo(`Trying to reconnect to Jabber after ${reconnectTimeoutSec} sec`);
-            setTimeout(jabber.connect, reconnectTimeoutSec * 1000)
+            setTimeout(() => jabber.connect(), reconnectTimeoutSec * 1000)
         });
 
         jabber.on('error', function (e) {
