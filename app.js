@@ -309,7 +309,9 @@ function App() {
         });
 
         ramXmpp.on('presence:disconnect', (stanza, from_jid, from_nick, Status) => {
-            delete jabber_connected_users[from_jid][from_nick];
+            if (jabber_connected_users[from_jid]) {
+                delete jabber_connected_users[from_jid][from_nick];
+            }
 
             if (!this.needShowPresence(from_jid)) {
                 return;
