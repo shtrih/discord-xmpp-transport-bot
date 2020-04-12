@@ -38,7 +38,8 @@ function App() {
         last_error_count_message = null,
         error_stanzas_count = null,
         ramXmpp = null,
-        jabber = null
+        jabber = null,
+        isConnecting = false
     ;
 
     this.run = () => {
@@ -212,8 +213,17 @@ function App() {
             jabber_connected_users = {};
             clearInterval(conferenceSendPresenceInterval);
 
+            if (isConnecting) {
+                LogInfo('Still connecting…');
+                return;
+            }
+
+            isConnecting = true;
             LogInfo(`Trying to reconnect to Jabber after ${reconnectTimeoutSec} sec`);
-            setTimeout(() => jabber.connect(), reconnectTimeoutSec * 1000)
+            setTimeout(function() {
+                jabber.connect();
+                isConnecting = false;
+            }, reconnectTimeoutSec * 1000)
         });
 
         jabber.on('error', function (e) {
