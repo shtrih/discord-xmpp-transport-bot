@@ -372,6 +372,14 @@ function App() {
         });
 
         ramXmpp.on('message:groupchat:subject', (stanza, from_jid, from_nick, Subject, has_delay) => {
+            const channelId = this.getChannelByJid(from_jid);
+
+            if (!remDiscord.canEditChannel(channelId)) {
+                const channel = remDiscord.getClient().channels.get(channelId);
+                LogInfo('MANAGE_CHANNELS permission is required to set topic in "', channel ? channel.name : channelId, '" channel');
+                return;
+            }
+
             const topic = Subject.getText();
             LogInfo('Trying to set Discord topic: ', topic);
             remDiscord.editChannel(this.getChannelByJid(from_jid), topic + '\n ~ ' + from_jid, from_nick);
