@@ -12,8 +12,8 @@ const Discord = require('./lib/RemDiscord.js'),
     LogError = debug('error:app'),
     LogDebugJabber = debug('debug:jabber'),
     LogErrorJabber = debug('error:jabber'),
-    config = require('./lib/Configuration')
-        .load(`./config/${process.env.NODE_ENV || 'development'}.cjson`),
+    { SYNC, load: loadConfig } = require('./lib/Configuration'),
+    config = loadConfig(`./config/${process.env.NODE_ENV || 'development'}.cjson`),
     List = require('./lib/List.js')
 ;
 
