@@ -42,7 +42,9 @@ function App() {
         isConnecting = false,
         extractArgs = function (text, limit=1) {
             return text.split(/\s+/, limit).filter((v) => v)
-        }
+        },
+        syncByChannel = new Map(),
+        syncByJid = new Map()
     ;
 
     this.run = () => {
@@ -109,8 +111,10 @@ function App() {
 
                 for (let i in jid_by_channel) {
                     if (jid_by_channel.hasOwnProperty(i)) {
-                        let channel = discord.channels.get(i);
-                        reply += `\n\` "${channel.guild.name}" #${channel.name} (${i}) ←→ ${jid_by_channel[i]}\``;
+                        let channel = discord.channels.get(i),
+                            sync = syncByChannel.get(i)
+                        ;
+                        reply += `\n\`"${channel.guild.name}" #${channel.name} (${i}) ←→ ${jid_by_channel[i]} (sync: ${sync ? sync : SYNC.BOTH})\``;
                     }
                 }
 
@@ -128,7 +132,7 @@ function App() {
                     ;
 
                     if (!msg) {
-                        reply += ' Looks like empty message.content.';
+                        reply += ' Looks like empty message content.';
                     }
                     // to discord
                     else if (room.match(/\d+/) && jid_by_channel[room]) {
@@ -171,6 +175,13 @@ function App() {
                 );
             }
             else {
+                if (syncByChannel.has(message.channel.id)) {
+                    if (syncByChannel.get(message.channel.id) === SYNC.TO_DISCORD) {
+                        LogDebug('Sync: ' + SYNC.TO_DISCORD + '. Skip message');
+                        return;
+                    }
+                }
+
                 remDiscord.fixMessage('<@!' + message.author.id + '>', message).then((userNick) => {
                     if ('@null' === userNick || '@undefined' === userNick) {
                         userNick = '@' + message.author.username;
@@ -208,6 +219,11 @@ function App() {
                 nick_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].nick;
                 nick_mask[ config.roomList[i].roomJid ] = config.roomList[i].fromNickMask;
                 show_presence_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].showPresence;
+
+                if (config.roomList[i].sync && config.roomList[i].sync !== SYNC.BOTH) {
+                    syncByChannel.set(config.roomList[i].roomChannelId, config.roomList[i].sync);
+                    syncByJid.set(config.roomList[i].roomJid, config.roomList[i].sync);
+                }
             }
 
             // TODO: handle disconnect events by status codes (http://xmpp.org/extensions/xep-0045.html#registrar-statuscodes)
@@ -399,6 +415,13 @@ function App() {
         ramXmpp.on('message:groupchat', (stanza, from_jid, from_nick, Body, has_delay) => {
             if (has_delay) {
                 return;
+            }
+
+            if (syncByJid.has(from_jid)) {
+                if (syncByJid.get(from_jid) === SYNC.TO_JABBER) {
+                    LogDebug('Sync: '+ SYNC.TO_JABBER +'. Skip message');
+                    return;
+                }
             }
 
             // Reset latest error on receive normal message

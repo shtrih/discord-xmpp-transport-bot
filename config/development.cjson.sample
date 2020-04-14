@@ -31,6 +31,14 @@
             "roomJid": "some-conf@conference.jabber.org",
 
             /**
+             * Sync settings:
+             * both — Send messages in both directions (default).
+             * to_jabber — Send messages only from Discord to Jabber.
+             * to_discord — Send messages only from Jabber to Discord.
+             */
+            "sync": "both",
+
+            /**
              * For example:
              *    "<%nickname%>: "
              *    ""
