@@ -1,4 +1,5 @@
 {
+    "prefix": "!",
     "discord": {
         /**
          * CLIENT SECRET from Application page (https://discordapp.com/developers/applications/)
