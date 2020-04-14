@@ -59,4 +59,4 @@ All commands work only from discord side. The bot answers visible only in discor
 |`!rooms`|Show linked jabber conferences|DM, Room|
 |`!users`|Show users from linked jabber conference. Also, show who is ignored by `!ignore` command|Room|
 |`!ignore JabberUsername`|Ignore user from jabber by a nickname. If he changes nickname → he will be ignored with a new nickname.|Room|
-|`!unignore JabberUsername`|Stop ignoring some user|Room|
+|`!unignore JabberUsername` or `!dont_ignore JabberUsername`|Stop ignoring some user|Room|
