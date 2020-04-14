@@ -70,7 +70,6 @@ function App() {
         discord.on('message', (message) => {
             if (message.webhookID // preventing duplicates, since we use webhook to send messages from jabber
                 || message.author.id === discord.user.id
-                || !jid_by_channel[message.channel.id]
                 // || !message.author.bot
             ) {
                 return;
@@ -174,7 +173,7 @@ function App() {
                     this.escapeStringTemplate`*${nickname}*${prefix} ignored.`
                 );
             }
-            else {
+            else if (jid_by_channel[message.channel.id]) {
                 if (syncByChannel.has(message.channel.id)) {
                     if (syncByChannel.get(message.channel.id) === SYNC.TO_DISCORD) {
                         LogDebug('Sync: ' + SYNC.TO_DISCORD + '. Skip message');
