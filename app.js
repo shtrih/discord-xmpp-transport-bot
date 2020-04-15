@@ -13,8 +13,7 @@ const Discord = require('./lib/RemDiscord.js'),
     LogDebugJabber = debug('debug:jabber'),
     LogErrorJabber = debug('error:jabber'),
     { SYNC, load: loadConfig } = require('./lib/Configuration'),
-    config = loadConfig(`./config/${process.env.NODE_ENV || 'development'}.cjson`),
-    List = require('./lib/List.js')
+    config = loadConfig(`./config/${process.env.NODE_ENV || 'development'}.cjson`)
 ;
 
 new App().run();
@@ -23,7 +22,7 @@ function App() {
     const
         remDiscord = new Discord(config.discord.token),
         discord = remDiscord.getClient(),
-        Ignore = new List(),
+        IgnoredNicks = new Map(),
         reconnectTimeoutSec = 10
     ;
     let
@@ -89,7 +88,7 @@ function App() {
             }
             else if ('users' === commandName) {
                 let reply = 'Did not receive information about the presence';
-                let ignored = Ignore.list().join(', ');
+                let ignored = [...IgnoredNicks.keys()].join(', ');
 
                 if (!jid_by_channel[message.channel.id]) {
                     reply = 'This room is not associated with any jabber conference ¯\\_(ツ)_/¯';
@@ -162,10 +161,10 @@ function App() {
                 }
 
                 if (ignore) {
-                    Ignore.add(nickname)
+                    IgnoredNicks.set(nickname, true)
                 }
                 else {
-                    Ignore.remove(nickname)
+                    IgnoredNicks.delete(nickname)
                 }
 
                 remDiscord.send(
@@ -386,8 +385,9 @@ function App() {
             jabber_connected_users[from_jid][new_nick] = true;
 
             let reply = this.escapeStringTemplate`*${from_nick} renamed to ${new_nick}.*`;
-            if (Ignore.check(from_nick)) {
-                Ignore.remove(from_nick).add(new_nick);
+            if (IgnoredNicks.has(from_nick)) {
+                IgnoredNicks.delete(from_nick);
+                IgnoredNicks.set(new_nick, true);
                 reply += this.escapeStringTemplate`\n*${new_nick} ignored.*`
             }
 
@@ -429,7 +429,7 @@ function App() {
             if (from_nick === nick_by_jid[from_jid]) {
                 return;
             }
-            if (Ignore.check(from_nick)) {
+            if (IgnoredNicks.has(from_nick)) {
                 LogDebug('Ignore msg from ' + from_nick);
                 return;
             }
