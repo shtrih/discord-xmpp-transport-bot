@@ -343,7 +343,7 @@ function App() {
                 remDiscord.send(
                     this.getChannelByJid(from_jid),
                     this.escapeStringTemplate`*${from_nick} joins the room.*`
-                );
+                ).catch(LogError)
             }
         });
 
@@ -360,7 +360,7 @@ function App() {
                 remDiscord.send(
                     this.getChannelByJid(from_jid),
                     this.escapeStringTemplate`*${from_nick} leaves the room.*`
-                );
+                ).catch(LogError)
             }
         });
 
@@ -371,7 +371,7 @@ function App() {
             remDiscord.send(
                 this.getChannelByJid(from_jid),
                 this.escapeStringTemplate`*${from_nick} kicked (${byNick}: ${reason}).*`
-            );
+            ).catch(LogError)
         });
 
         ramXmpp.on('presence:disconnect:ban', (stanza, from_jid, from_nick, Actor, Reason) => {
@@ -381,7 +381,7 @@ function App() {
             remDiscord.send(
                 this.getChannelByJid(from_jid),
                 this.escapeStringTemplate`*${from_nick} banned (${byNick}: ${reason}).*`
-            );
+            ).catch(LogError)
         });
 
         ramXmpp.on('presence:rename', (stanza, from_jid, from_nick, new_nick) => {
@@ -398,7 +398,7 @@ function App() {
             remDiscord.send(
                 this.getChannelByJid(from_jid),
                 reply
-            );
+            ).catch(LogError)
         });
 
         ramXmpp.on('message:groupchat:subject', (stanza, from_jid, from_nick, Subject, has_delay) => {
