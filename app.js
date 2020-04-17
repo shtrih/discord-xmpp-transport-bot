@@ -60,6 +60,10 @@ function App() {
             remDiscord.logError(closeEvent);
             LogInfo(`Trying to reconnect to Discord after ${reconnectTimeoutSec} sec`);
 
+            if (jabber) {
+                jabber.end()
+            }
+
             setTimeout(remDiscord.connect, reconnectTimeoutSec * 1000)
         });
 
