@@ -18,6 +18,9 @@
 
         // Show message on user connect/leave room. Can be overridden in every room
         "showPresence": true,
+        // Send any stanza errors to this Discord channel. Can be overridden in every room
+        "stanzaErrorsChannel": "",
+
         "reconnectIntervalSec": 600
     },
     /**
@@ -45,7 +48,8 @@
              *    "%nickname%: "
              */
             "fromNickMask": "from %nickname%: ",
-            "showPresence": false
+            "showPresence": false,
+            "stanzaErrorsChannel": "",
         },
         {
             "nick": "Yukari",

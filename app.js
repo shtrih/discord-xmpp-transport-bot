@@ -43,7 +43,9 @@ function App() {
             return text.split(/\s+/, limit).filter((v) => v)
         },
         syncByChannel = new Map(),
-        syncByJid = new Map()
+        syncByJid = new Map(),
+        linkConfigByJid = new Map(),
+        linkConfigByChannel = new Map()
     ;
 
     this.run = () => {
@@ -216,6 +218,9 @@ function App() {
                 LogInfo('Connecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
                 ramXmpp.join(config.roomList[i].roomJid, config.roomList[i].nick);
 
+                linkConfigByChannel.set(config.roomList[i].roomChannelId, config.roomList[i]);
+                linkConfigByJid.set(config.roomList[i].roomJid, config.roomList[i]);
+
                 jid_by_channel[ config.roomList[i].roomChannelId ] = config.roomList[i].roomJid;
                 channel_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].roomChannelId;
                 nick_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].nick;
@@ -288,6 +293,17 @@ function App() {
         });
 
         ramXmpp.on('stanza:error', (stanza, from_jid) => {
+            let channelId = this.getChannelByJid(from_jid);
+
+            let errorChannel = config.jabber.stanzaErrorsChannel;
+            if (linkConfigByJid.has(from_jid) && linkConfigByJid.get(from_jid).stanzaErrorsChannel) {
+                errorChannel = linkConfigByJid.get(from_jid).stanzaErrorsChannel;
+            }
+
+            if (errorChannel) {
+                channelId = errorChannel;
+            }
+
             const error_count_text = 'Error thrown times: ';
 
             // If the same as the previous error then just update message counter
@@ -305,14 +321,14 @@ function App() {
             error_stanzas_count = 1;
 
             remDiscord.send(
-                this.getChannelByJid(from_jid),
+                channelId,
                 '**[stanza:error]** ```' + stanza + '```'
             ).then(() => {
                     last_error_stanza = stanza;
 
                     remDiscord
                         .send(
-                            this.getChannelByJid(from_jid),
+                            channelId,
                             error_count_text + error_stanzas_count
                         )
                         .then(
