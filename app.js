@@ -474,26 +474,6 @@ function App() {
         });
     };
 
-    this.actionSync = async (callback, ...args) => {
-        if (typeof callback === 'function') {
-            await callback.call(this, args);
-        }
-    };
-
-    this.sendDiscordSync = (channelId, message) => {
-        if (roomConfigByJid.get(from_jid).sync === SYNC.TO_JABBER) {
-            LogDebug('Sync: '+ SYNC.TO_JABBER +'. Skip message');
-            return;
-        }
-        if (roomConfigByChannel.get(message.channel.id).sync === SYNC.TO_DISCORD) {
-            LogDebug('Sync: ' + SYNC.TO_DISCORD + '. Skip message');
-            return;
-        }
-
-        this.actionSync(remDiscord.send, channelId, message)
-            .catch(LogError)
-    };
-
     this.getChannelByJid = (conferenceJID) => {
         return roomConfigByJid.get(conferenceJID).roomChannelId;
     };
