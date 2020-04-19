@@ -353,6 +353,10 @@ function App() {
         });
 
         ramXmpp.on('presence:disconnect:kick', (stanza, from_jid, from_nick, Actor, Reason) => {
+            if (!this.needShowPresence(from_jid)) {
+                return;
+            }
+
             const byNick = Actor ? Actor.getAttr('nick') : '',
                 reason = Reason ? Reason.getText() : '<reason not specified>'
             ;
@@ -363,6 +367,10 @@ function App() {
         });
 
         ramXmpp.on('presence:disconnect:ban', (stanza, from_jid, from_nick, Actor, Reason) => {
+            if (!this.needShowPresence(from_jid)) {
+                return;
+            }
+
             const byNick = Actor ? Actor.getAttr('nick') : '',
                 reason = Reason ? Reason.getText() : '<reason not specified>'
             ;
@@ -381,6 +389,10 @@ function App() {
                 IgnoredNicks.delete(from_nick);
                 IgnoredNicks.set(new_nick, true);
                 reply += this.escapeStringTemplate`\n*${new_nick} ignored.*`
+            }
+
+            if (!this.needShowPresence(from_jid)) {
+                return;
             }
 
             remDiscord.send(
