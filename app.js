@@ -91,13 +91,14 @@ function App() {
                 let reply = 'Did not receive information about the presence';
                 let ignored = [...IgnoredNicks.keys()].join(', ');
 
-                if (!roomConfigByChannel.has(message.channel.id)) {
-                    reply = 'This room is not associated with any jabber conference ¯\\_(ツ)_/¯';
+                if (roomConfigByChannel.has(message.channel.id)) {
+                    const jid = roomConfigByChannel.get(message.channel.id).roomJid;
+                    if (jabberConnectedUsers.has(jid)) {
+                        reply = '**Online:** ' + this.escapeMarkdown([...jabberConnectedUsers.get(jid).keys()].join(', '));
+                    }
                 }
-
-                const jid = roomConfigByChannel.get(message.channel.id).roomJid;
-                if (jabberConnectedUsers.has(jid)) {
-                    reply = '**Online:** ' + this.escapeMarkdown([...jabberConnectedUsers.get(jid).keys()].join(', '));
+                else {
+                    reply = 'This room is not associated with any jabber conference ¯\\_(ツ)_/¯';
                 }
 
                 if (ignored) {
