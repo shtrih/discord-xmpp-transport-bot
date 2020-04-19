@@ -8,7 +8,7 @@ You can join several conferences on one bot instance.
  - Create configuration file: `cp config/development.cjson.sample config/development.cjson`. Create `production.cjson` for production mode (`NODE_ENV=production`).
  - Edit configuration files. See section `Adding Bot to Discord Guild` below.
  - Start application: `nodejs ./app.js` or `npm start`.
- - Type `!ping` in discord channel to check "pong" answer.
+ - Type `!ping` in Discord channel to check "pong" answer.
 
 # Adding Bot to Discord Guild
  1. You need to [create an application](https://discordapp.com/developers/docs/topics/oauth2#bots) on [My Apps](https://discordapp.com/developers/applications/me) page.
@@ -19,9 +19,9 @@ You can join several conferences on one bot instance.
 
     There are two optional permissions: `MANAGE_CHANNELS` and `MANAGE_WEBHOOKS` (both requires [Two-Factor Authentication](https://support.discordapp.com/hc/en-us/articles/219576828-Setting-up-Two-Factor-Authentication)). 
 
-    Set `MANAGE_CHANNELS` if you want to bot set channel topic from jabber to discord (one way sync).
+    Set `MANAGE_CHANNELS` if you want to bot set channel topic from jabber to Discord (one way sync).
 
-    Set `MANAGE_WEBHOOKS` permission if you want to bot send messages to discord on behalf of jabber user nickname.
+    Set `MANAGE_WEBHOOKS` permission if you want to bot send messages to Discord on behalf of jabber user nickname.
     
  3. You need to navigate to this URL, you'll be prompted to add the bot to a guild in which you have proper permissions. On acceptance, the bot will be added.
 
@@ -50,12 +50,12 @@ Run using docker-compose:
 
 # Bot commands
 
-All commands work only from discord side. The bot answers visible only in discord.
+All commands work only from Discord side. The bot answers visible only in Discord.
 
 |Command|Description|Where works|
 |---|---|---|
 |`!ping`|Answers «pong».|Direct Message, Room|
-|`!say <room> Text`|Say something behalf of the bot. You can use jabber conference or discord room ID as <room> parameter (see `!rooms` command). This command only works for bot admin (`adminId` in the config file)|DM, Room|
+|`!say <room> Text`|Say something behalf of the bot. You can use jabber conference or Discord room ID as <room> parameter (see `!rooms` command). This command only works for bot admin (`adminId` in the config file)|DM, Room|
 |`!rooms`|Show linked jabber conferences|DM, Room|
 |`!users`|Show users from linked jabber conference. Also, show who is ignored by `!ignore` command|Room|
 |`!ignore JabberUsername`|Ignore user from jabber by a nickname. If he changes nickname → he will be ignored with a new nickname.|Room|
