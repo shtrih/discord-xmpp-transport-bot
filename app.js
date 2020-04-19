@@ -31,10 +31,10 @@ function App() {
     ;
     let
         conferenceSendPresenceInterval,
-        jabber_connected_users = new Map(),
-        last_error_stanza = null,
-        last_error_count_message = null,
-        error_stanzas_count = null,
+        jabberConnectedUsers = new Map(),
+        lastErrorStanza = null,
+        lastErrorCountMessage = null,
+        errorStanzasCount = null,
         ramXmpp = null,
         jabber = null,
         isConnecting = false,
@@ -96,8 +96,8 @@ function App() {
                 }
 
                 const jid = roomConfigByChannel.get(message.channel.id).roomJid;
-                if (jabber_connected_users.has(jid)) {
-                    reply = '**Online:** ' + this.escapeMarkdown([...jabber_connected_users.get(jid).keys()].join(', '));
+                if (jabberConnectedUsers.has(jid)) {
+                    reply = '**Online:** ' + this.escapeMarkdown([...jabberConnectedUsers.get(jid).keys()].join(', '));
                 }
 
                 if (ignored) {
@@ -279,36 +279,36 @@ function App() {
             const error_count_text = 'Error thrown times: ';
 
             // If the same as the previous error then just update message counter
-            if (last_error_stanza && last_error_stanza.toString() === stanza.toString()) {
-                ++error_stanzas_count;
+            if (lastErrorStanza && lastErrorStanza.toString() === stanza.toString()) {
+                ++errorStanzasCount;
 
                 /** @see https://discord.js.org/#/docs/main/stable/class/Message?scrollTo=edit */
-                last_error_count_message
-                    .edit(error_count_text + error_stanzas_count)
+                lastErrorCountMessage
+                    .edit(error_count_text + errorStanzasCount)
                     .catch(LogError);
 
                 return;
             }
 
-            error_stanzas_count = 1;
+            errorStanzasCount = 1;
 
             remDiscord.send(
                 channelId,
                 '**[stanza:error]** ```' + stanza + '```'
             ).then(() => {
-                    last_error_stanza = stanza;
+                    lastErrorStanza = stanza;
 
                     remDiscord
                         .send(
                             channelId,
-                            error_count_text + error_stanzas_count
+                            error_count_text + errorStanzasCount
                         )
                         .then(
                             /**
                              * @param {Object|Message} message
                              * @see https://discord.js.org/#/docs/main/stable/class/Message */
                             message => {
-                                last_error_count_message = message;
+                                lastErrorCountMessage = message;
                             }
                         )
                     ;
@@ -317,12 +317,12 @@ function App() {
         });
 
         ramXmpp.on('presence:connect', (stanza, from_jid, from_nick) => {
-            if (!jabber_connected_users.has(from_jid)) {
-                jabber_connected_users.set(from_jid, new Map);
+            if (!jabberConnectedUsers.has(from_jid)) {
+                jabberConnectedUsers.set(from_jid, new Map);
             }
 
-            if (!jabber_connected_users.get(from_jid).has(from_nick)) {
-                jabber_connected_users.get(from_jid).set(from_nick, true);
+            if (!jabberConnectedUsers.get(from_jid).has(from_nick)) {
+                jabberConnectedUsers.get(from_jid).set(from_nick, true);
 
                 if (!this.needShowPresence(from_jid)) {
                     return;
@@ -336,8 +336,8 @@ function App() {
         });
 
         ramXmpp.on('presence:disconnect', (stanza, from_jid, from_nick, Status) => {
-            if (jabber_connected_users.has(from_jid)) {
-                jabber_connected_users.get(from_jid).delete(from_nick);
+            if (jabberConnectedUsers.has(from_jid)) {
+                jabberConnectedUsers.get(from_jid).delete(from_nick);
             }
 
             if (!this.needShowPresence(from_jid)) {
@@ -373,8 +373,8 @@ function App() {
         });
 
         ramXmpp.on('presence:rename', (stanza, from_jid, from_nick, new_nick) => {
-            jabber_connected_users.get(from_jid).delete(from_nick);
-            jabber_connected_users.get(from_jid).set(new_nick, true);
+            jabberConnectedUsers.get(from_jid).delete(from_nick);
+            jabberConnectedUsers.get(from_jid).set(new_nick, true);
 
             let reply = this.escapeStringTemplate`*${from_nick} renamed to ${new_nick}.*`;
             if (IgnoredNicks.has(from_nick)) {
@@ -414,7 +414,7 @@ function App() {
             }
 
             // Reset latest error on receive normal message
-            last_error_stanza = null;
+            lastErrorStanza = null;
 
             if (from_nick === roomConfigByJid.get(from_jid).nick) {
                 return;
