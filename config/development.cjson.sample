@@ -14,12 +14,19 @@
     },
     "jabber": {
         "userJid": "user@jabber.org",
-        "userPass": "pass",
+        "userPass": "password",
 
-        // Show message on user connect/leave room. Can be overridden in every room
+        /**
+         * Show message on user connect/leave room.
+         * Can be overridden in every room.
+         */
         "showPresence": true,
-        // Send any stanza errors to this Discord channel. Can be overridden in every room
-        "stanzaErrorsChannel": "",
+        /**
+         * Send any stanza errors to this Discord channel ID.
+         * If empty, sends errors into linked channel.
+         * Can be overridden in every room.
+         */
+        "stanzaErrorsChannelId": "",
 
         "reconnectIntervalSec": 600
     },
@@ -48,14 +55,13 @@
              *    "%nickname%: "
              */
             "fromNickMask": "from %nickname%: ",
-            "showPresence": false,
-            "stanzaErrorsChannel": "",
-        },
-        {
-            "nick": "Yukari",
-            "roomChannelId": "000000000000000000",
-            "roomJid": "another-conf@conference.jabber.org",
-            "fromNickMask": "<%nickname%>: "
+            "showPresence": false
         }
+//        , {
+//            "nick": "Yukari",
+//            "roomChannelId": "000000000000000000",
+//            "roomJid": "another-conf@conference.jabber.org",
+//            "fromNickMask": "<%nickname%>: "
+//        }
     ]
 }

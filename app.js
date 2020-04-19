@@ -13,7 +13,11 @@ const Discord = require('./lib/RemDiscord.js'),
     LogDebugJabber = debug('debug:jabber'),
     LogErrorJabber = debug('error:jabber'),
     { SYNC, load: loadConfig } = require('./lib/Configuration'),
-    config = loadConfig(`./config/${process.env.NODE_ENV || 'development'}.cjson`)
+    config = loadConfig(`./config/${process.env.NODE_ENV || 'development'}.cjson`),
+    {
+        roomByJid: roomConfigByJid,
+        roomByChannel: roomConfigByChannel
+    } = config
 ;
 
 new App().run();
@@ -27,12 +31,7 @@ function App() {
     ;
     let
         conferenceSendPresenceInterval,
-        jid_by_channel = {},
-        channel_by_jid = {},
-        nick_by_jid = {},
-        nick_mask = {},
-        show_presence_by_jid = {},
-        jabber_connected_users = {},
+        jabber_connected_users = new Map(),
         last_error_stanza = null,
         last_error_count_message = null,
         error_stanzas_count = null,
@@ -41,11 +40,7 @@ function App() {
         isConnecting = false,
         extractArgs = function (text, limit=1) {
             return text.split(/\s+/, limit).filter((v) => v)
-        },
-        syncByChannel = new Map(),
-        syncByJid = new Map(),
-        linkConfigByJid = new Map(),
-        linkConfigByChannel = new Map()
+        }
     ;
 
     this.run = () => {
@@ -96,12 +91,13 @@ function App() {
                 let reply = 'Did not receive information about the presence';
                 let ignored = [...IgnoredNicks.keys()].join(', ');
 
-                if (!jid_by_channel[message.channel.id]) {
+                if (!roomConfigByChannel.has(message.channel.id)) {
                     reply = 'This room is not associated with any jabber conference ¯\\_(ツ)_/¯';
                 }
 
-                if ("object" === typeof(jabber_connected_users[jid_by_channel[message.channel.id]])) {
-                    reply = '**Online:** ' + this.escapeMarkdown(Object.keys(jabber_connected_users[jid_by_channel[message.channel.id]]).join(', '));
+                const jid = roomConfigByChannel.get(message.channel.id).roomJid;
+                if (jabber_connected_users.has(jid)) {
+                    reply = '**Online:** ' + this.escapeMarkdown([...jabber_connected_users.get(jid).keys()].join(', '));
                 }
 
                 if (ignored) {
@@ -113,13 +109,11 @@ function App() {
             else if ('rooms' === commandName) {
                 let reply = 'Room list:';
 
-                for (let i in jid_by_channel) {
-                    if (jid_by_channel.hasOwnProperty(i)) {
-                        let channel = discord.channels.get(i),
-                            sync = syncByChannel.get(i)
-                        ;
-                        reply += `\n\`"${channel.guild.name}" #${channel.name} (${i}) ←→ ${jid_by_channel[i]} (sync: ${sync ? sync : SYNC.BOTH})\``;
-                    }
+                for (const channelId of roomConfigByChannel.keys()) {
+                    let channel = discord.channels.get(channelId),
+                        sync = roomConfigByChannel.get(channelId).sync
+                    ;
+                    reply += `\n\`"${channel.guild.name}" #${channel.name} (${channelId}) ←→ ${roomConfigByChannel.get(channelId).roomJid} (sync: ${sync ? sync : SYNC.BOTH})\``;
                 }
 
                 remDiscord.send(message.channel.id, reply);
@@ -139,12 +133,12 @@ function App() {
                         reply += ' Looks like empty message content.';
                     }
                     // to discord
-                    else if (room.match(/\d+/) && jid_by_channel[room]) {
+                    else if (room.match(/\d+/) && roomConfigByChannel.has(room)) {
                         replyToRoom = room;
                         reply = msg;
                     }
                     // to jabber
-                    else if (channel_by_jid[room]) {
+                    else if (roomConfigByJid.has(room)) {
                         ramXmpp.send(room, msg);
 
                         return;
@@ -178,24 +172,22 @@ function App() {
                     this.escapeStringTemplate`*${nickname}*${prefix} ignored.`
                 );
             }
-            else if (jid_by_channel[message.channel.id]) {
-                if (syncByChannel.has(message.channel.id)) {
-                    if (syncByChannel.get(message.channel.id) === SYNC.TO_DISCORD) {
-                        LogDebug('Sync: ' + SYNC.TO_DISCORD + '. Skip message');
-                        return;
-                    }
+            else if (roomConfigByChannel.has(message.channel.id)) {
+                if (roomConfigByChannel.get(message.channel.id).sync === SYNC.TO_DISCORD) {
+                    LogDebug('Sync: ' + SYNC.TO_DISCORD + '. Skip message');
+                    return;
                 }
-
+                const jid = roomConfigByChannel.get(message.channel.id).roomJid;
                 remDiscord.fixMessage('<@!' + message.author.id + '>', message).then((userNick) => {
                     if ('@null' === userNick || '@undefined' === userNick) {
                         userNick = '@' + message.author.username;
                     }
-                    userNick = this.getNicknameWMask(jid_by_channel[message.channel.id], userNick);
+                    userNick = this.getNicknameWMask(jid, userNick);
 
                     const attachments = remDiscord.getAttachmentsLinks(message);
 
                     remDiscord.fixMessage(message.content, message).then((msg) => {
-                        ramXmpp.send(jid_by_channel[message.channel.id],
+                        ramXmpp.send(jid,
                             userNick
                             + msg
                             + attachments
@@ -214,41 +206,21 @@ function App() {
         jabber.on('online', function () {
             LogInfo('Connected to jabber as ' + config.jabber.userJid);
 
-            for (let i = 0; i < config.roomList.length; i++) {
-                LogInfo('Connecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
-                ramXmpp.join(config.roomList[i].roomJid, config.roomList[i].nick);
-
-                linkConfigByChannel.set(config.roomList[i].roomChannelId, config.roomList[i]);
-                linkConfigByJid.set(config.roomList[i].roomJid, config.roomList[i]);
-
-                jid_by_channel[ config.roomList[i].roomChannelId ] = config.roomList[i].roomJid;
-                channel_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].roomChannelId;
-                nick_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].nick;
-                nick_mask[ config.roomList[i].roomJid ] = config.roomList[i].fromNickMask;
-                show_presence_by_jid[ config.roomList[i].roomJid ] = config.roomList[i].showPresence;
-
-                if (config.roomList[i].sync && config.roomList[i].sync !== SYNC.BOTH) {
-                    syncByChannel.set(config.roomList[i].roomChannelId, config.roomList[i].sync);
-                    syncByJid.set(config.roomList[i].roomJid, config.roomList[i].sync);
-                }
+            for (const roomJid of roomConfigByJid.keys()) {
+                LogInfo('Connecting to conf %s as %s', roomJid, roomConfigByJid.get(roomJid).nick);
+                ramXmpp.join(roomJid, roomConfigByJid.get(roomJid).nick);
             }
 
             // TODO: handle disconnect events by status codes (http://xmpp.org/extensions/xep-0045.html#registrar-statuscodes)
             conferenceSendPresenceInterval = setInterval(function () {
-                for (let i = 0; i < config.roomList.length; i++) {
-                    LogInfo('Reconnecting to conf %s as %s', config.roomList[i].roomJid, config.roomList[i].nick);
-                    ramXmpp.join(config.roomList[i].roomJid, config.roomList[i].nick);
+                for (const roomJid of roomConfigByJid.keys()) {
+                    LogInfo('Reconnecting to conf %s as %s', roomJid, roomConfigByJid.get(roomJid).nick);
+                    ramXmpp.join(roomJid, roomConfigByJid.get(roomJid).nick);
                 }
             }, (config.jabber.reconnectIntervalSec || 600) * 1000);
         });
 
         jabber.on('offline', function () {
-            jid_by_channel = {};
-            channel_by_jid = {};
-            nick_by_jid = {};
-            nick_mask = {};
-            show_presence_by_jid = {};
-            jabber_connected_users = {};
             clearInterval(conferenceSendPresenceInterval);
 
             if (isConnecting) {
@@ -295,9 +267,9 @@ function App() {
         ramXmpp.on('stanza:error', (stanza, from_jid) => {
             let channelId = this.getChannelByJid(from_jid);
 
-            let errorChannel = config.jabber.stanzaErrorsChannel;
-            if (linkConfigByJid.has(from_jid) && linkConfigByJid.get(from_jid).stanzaErrorsChannel) {
-                errorChannel = linkConfigByJid.get(from_jid).stanzaErrorsChannel;
+            let errorChannel = false;
+            if (roomConfigByJid.has(from_jid)) {
+                errorChannel = roomConfigByJid.get(from_jid).stanzaErrorsChannelId;
             }
 
             if (errorChannel) {
@@ -345,12 +317,12 @@ function App() {
         });
 
         ramXmpp.on('presence:connect', (stanza, from_jid, from_nick) => {
-            if (!jabber_connected_users[from_jid]) {
-                jabber_connected_users[from_jid] = {};
+            if (!jabber_connected_users.has(from_jid)) {
+                jabber_connected_users.set(from_jid, new Map);
             }
 
-            if (!jabber_connected_users[from_jid][from_nick]) {
-                jabber_connected_users[from_jid][from_nick] = true;
+            if (!jabber_connected_users.get(from_jid).has(from_nick)) {
+                jabber_connected_users.get(from_jid).set(from_nick, true);
 
                 if (!this.needShowPresence(from_jid)) {
                     return;
@@ -364,8 +336,8 @@ function App() {
         });
 
         ramXmpp.on('presence:disconnect', (stanza, from_jid, from_nick, Status) => {
-            if (jabber_connected_users[from_jid]) {
-                delete jabber_connected_users[from_jid][from_nick];
+            if (jabber_connected_users.has(from_jid)) {
+                jabber_connected_users.get(from_jid).delete(from_nick);
             }
 
             if (!this.needShowPresence(from_jid)) {
@@ -401,8 +373,8 @@ function App() {
         });
 
         ramXmpp.on('presence:rename', (stanza, from_jid, from_nick, new_nick) => {
-            delete jabber_connected_users[from_jid][from_nick];
-            jabber_connected_users[from_jid][new_nick] = true;
+            jabber_connected_users.get(from_jid).delete(from_nick);
+            jabber_connected_users.get(from_jid).set(new_nick, true);
 
             let reply = this.escapeStringTemplate`*${from_nick} renamed to ${new_nick}.*`;
             if (IgnoredNicks.has(from_nick)) {
@@ -436,17 +408,15 @@ function App() {
                 return;
             }
 
-            if (syncByJid.has(from_jid)) {
-                if (syncByJid.get(from_jid) === SYNC.TO_JABBER) {
-                    LogDebug('Sync: '+ SYNC.TO_JABBER +'. Skip message');
-                    return;
-                }
+            if (roomConfigByJid.get(from_jid).sync === SYNC.TO_JABBER) {
+                LogDebug('Sync: '+ SYNC.TO_JABBER +'. Skip message');
+                return;
             }
 
             // Reset latest error on receive normal message
             last_error_stanza = null;
 
-            if (from_nick === nick_by_jid[from_jid]) {
+            if (from_nick === roomConfigByJid.get(from_jid).nick) {
                 return;
             }
             if (IgnoredNicks.has(from_nick)) {
@@ -492,20 +462,36 @@ function App() {
         });
     };
 
+    this.actionSync = async (callback, ...args) => {
+        if (typeof callback === 'function') {
+            await callback.call(this, args);
+        }
+    };
+
+    this.sendDiscordSync = (channelId, message) => {
+        if (roomConfigByJid.get(from_jid).sync === SYNC.TO_JABBER) {
+            LogDebug('Sync: '+ SYNC.TO_JABBER +'. Skip message');
+            return;
+        }
+        if (roomConfigByChannel.get(message.channel.id).sync === SYNC.TO_DISCORD) {
+            LogDebug('Sync: ' + SYNC.TO_DISCORD + '. Skip message');
+            return;
+        }
+
+        this.actionSync(remDiscord.send, channelId, message)
+            .catch(LogError)
+    };
+
     this.getChannelByJid = (conferenceJID) => {
-        return channel_by_jid[conferenceJID];
+        return roomConfigByJid.get(conferenceJID).roomChannelId;
     };
 
     this.needShowPresence = (conferenceJID) => {
-        if (typeof show_presence_by_jid[conferenceJID] === 'boolean') {
-            return show_presence_by_jid[conferenceJID]
-        }
-
-        return config.jabber.showPresence
+        return roomConfigByJid.get(conferenceJID).showPresence
     };
 
     this.getNicknameWMask = function (roomJid, fromNick) {
-        const mask = nick_mask[ roomJid ];
+        const mask = roomConfigByJid.get(roomJid).fromNickMask;
         if (typeof mask === "string") {
             return mask.replace('%nickname%', fromNick);
         }
