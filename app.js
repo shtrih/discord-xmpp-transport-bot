@@ -47,7 +47,9 @@ function App() {
         discord.on('ready', () => {
             LogInfo('Connected to discord as ' + discord.user.username + " - (" + discord.user.id + ")");
 
-            ramXmpp = new Xmpp(config.jabber.userJid, config.jabber.userPass);
+            // Do not lose existing ramXmpp -- it will keep another connection
+            // open, multiplexing messages from Jabber conference.
+            ramXmpp = ramXmpp || new Xmpp(config.jabber.userJid, config.jabber.userPass);
             jabber = ramXmpp.getClient();
 
             this.registerXMPPListeners();
