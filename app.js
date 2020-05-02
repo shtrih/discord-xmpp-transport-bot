@@ -47,7 +47,7 @@ function App() {
         discord.on('ready', () => {
             LogInfo('Connected to discord as ' + discord.user.username + " - (" + discord.user.id + ")");
 
-            ramXmpp = new Xmpp(config.jabber.userJid, config.jabber.userPass);
+            ramXmpp ||= new Xmpp(config.jabber.userJid, config.jabber.userPass);
             jabber = ramXmpp.getClient();
 
             this.registerXMPPListeners();
