@@ -27,7 +27,9 @@ function App() {
         remDiscord = new Discord(config.discord.token),
         discord = remDiscord.getClient(),
         IgnoredNicks = new Map(),
-        reconnectTimeoutSec = 10
+        reconnectTimeoutSec = 10,
+        ramXmpp = new Xmpp(config.jabber.userJid, config.jabber.userPass),
+        jabber = ramXmpp.getClient()
     ;
     let
         conferenceSendPresenceInterval,
@@ -35,8 +37,6 @@ function App() {
         lastErrorStanza = null,
         lastErrorCountMessage = null,
         errorStanzasCount = null,
-        ramXmpp = null,
-        jabber = null,
         isConnecting = false,
         extractArgs = function (text, limit=1) {
             return text.split(/\s+/, limit).filter((v) => v)
@@ -44,24 +44,24 @@ function App() {
     ;
 
     this.run = () => {
+        remDiscord.connect()
+            .then(() => {
+                this.registerXMPPListeners();
+                ramXmpp.connect();
+            })
+            .catch((e) => {
+                LogError(e);
+                process.kill(process.pid, 'SIGTERM');
+            })
+        ;
+
         discord.on('ready', () => {
             LogInfo('Connected to discord as ' + discord.user.username + " - (" + discord.user.id + ")");
-
-            // Do not lose existing ramXmpp -- it will keep another connection
-            // open, multiplexing messages from Jabber conference.
-            ramXmpp = ramXmpp || new Xmpp(config.jabber.userJid, config.jabber.userPass);
-            jabber = ramXmpp.getClient();
-
-            this.registerXMPPListeners();
         });
 
         discord.on('disconnect', (closeEvent) => {
             remDiscord.logError(closeEvent);
             LogInfo(`Trying to reconnect to Discord after ${reconnectTimeoutSec} sec`);
-
-            if (jabber) {
-                jabber.end()
-            }
 
             setTimeout(remDiscord.connect, reconnectTimeoutSec * 1000)
         });
