@@ -4,7 +4,7 @@ You can join several conferences on one bot instance.
 
 # How to start
  - You need a working installation of [Node.js](https://nodejs.org) (version >= 7.7.1) on the machine this bot will run on. `npm` is installed with Node.js.
- - Install dependencies: `npm install`.
+ - Install dependencies: `npm ci`.
  - Create configuration file: `cp config/development.cjson.sample config/development.cjson`. Create `production.cjson` for production mode (`NODE_ENV=production`).
  - Edit configuration files. See section `Adding Bot to Discord Guild` below.
  - Start application: `nodejs ./app.js` or `npm start`.
@@ -37,7 +37,7 @@ If `DEBUG` is not set then it sets to `log all except debug` settings: [app.js#L
 # Docker
 Also you can run it in a [docker](https://docs.docker.com/) container:
 1. `cd ~/projects/discord-xmpp-transport-bot`
-2. `sudo docker run --rm -it -v $(pwd):/src:rw mkenney/npm:node-7.7-alpine "npm install"`
+2. `sudo docker run --rm -it -v $(pwd):/src:rw mkenney/npm:node-7.7-alpine "npm ci"`
 3. `sudo docker run --rm -it -v $(pwd):/src:ro mkenney/npm:node-7.7-alpine "npm run start-debug"`
 
 Or use Dockerfile:
