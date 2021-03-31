@@ -119,7 +119,7 @@ function App() {
                 let reply = 'Room list:';
 
                 for (const channelId of roomConfigByChannel.keys()) {
-                    let channel = discord.channels.get(channelId),
+                    let channel = discord.channels.cache.get(channelId),
                         sync = roomConfigByChannel.get(channelId).sync
                     ;
                     reply += `\n\`"${channel.guild.name}" #${channel.name} (${channelId}) ←→ ${roomConfigByChannel.get(channelId).roomJid} (sync: ${sync ? sync : SYNC.BOTH})\``;
@@ -345,7 +345,7 @@ function App() {
 
                 remDiscord.send(
                     this.getChannelByJid(from_jid),
-                    this.escapeStringTemplate`*${from_nick} joins the room.*`
+                    `*\`${from_nick}\` joins the room.*`
                 ).catch(LogError)
             }
         });
@@ -362,7 +362,7 @@ function App() {
             if (!Status || '303' !== Status.getAttr('code')) {
                 remDiscord.send(
                     this.getChannelByJid(from_jid),
-                    this.escapeStringTemplate`*${from_nick} leaves the room.*`
+                    `*\`${from_nick}\` leaves the room.*`
                 ).catch(LogError)
             }
         });
@@ -399,11 +399,11 @@ function App() {
             jabberConnectedUsers.get(from_jid).delete(from_nick);
             jabberConnectedUsers.get(from_jid).set(new_nick, true);
 
-            let reply = this.escapeStringTemplate`*${from_nick} renamed to ${new_nick}.*`;
+            let reply = `*\`${from_nick}\` renamed to \`${new_nick}\`.*`;
             if (IgnoredNicks.has(from_nick)) {
                 IgnoredNicks.delete(from_nick);
                 IgnoredNicks.set(new_nick, true);
-                reply += this.escapeStringTemplate`\n*${new_nick} ignored.*`
+                reply += `\n*\`${new_nick}\` ignored.*`
             }
 
             if (!this.needShowPresence(from_jid)) {
@@ -420,14 +420,14 @@ function App() {
             const channelId = this.getChannelByJid(from_jid);
 
             if (!remDiscord.canEditChannel(channelId)) {
-                const channel = remDiscord.getClient().channels.get(channelId);
+                const channel = remDiscord.getClient().channels.cache.get(channelId);
                 LogInfo('MANAGE_CHANNELS permission is required to set topic in "', channel ? channel.name : channelId, '" channel');
                 return;
             }
 
             const topic = Subject.getText();
             LogInfo('Trying to set Discord topic: ', topic);
-            remDiscord.editChannel(channelId, topic + '\n ~ ' + from_jid, from_nick);
+            remDiscord.editChannel(channelId, topic + '\n\n' + from_jid, from_nick);
         });
 
         ramXmpp.on('message:groupchat', (stanza, from_jid, from_nick, Body, has_delay) => {
