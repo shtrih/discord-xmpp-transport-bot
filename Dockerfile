@@ -1,4 +1,4 @@
-FROM node:10 as builder
+FROM node:12 as builder
 
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
@@ -6,7 +6,7 @@ ENV NODE_ENV=${NODE_ENV}
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:10
+FROM node:12
 
 WORKDIR /usr/src/app
 
