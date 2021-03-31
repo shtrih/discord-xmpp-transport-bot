@@ -57,6 +57,12 @@ function App() {
 
         discord.on('ready', () => {
             LogInfo('Connected to discord as ' + discord.user.username + " - (" + discord.user.id + ")");
+
+            if (config.discord.activityMessage) {
+                discord.user.setActivity(config.discord.activityMessage)
+                    .then(presence => LogDebug('Activity set', config.discord.activityMessage))
+                    .catch(remDiscord.logError);
+            }
         });
 
         discord.on('disconnect', (closeEvent) => {

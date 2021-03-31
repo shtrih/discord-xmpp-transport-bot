@@ -10,7 +10,10 @@
          * ID of the user who will be the Administrator.
          * The bot sends jabber errors via DM, jabber captcha message, DM from jabber conferences.
          */
-        "adminId": "000000000000000000"
+        "adminId": "000000000000000000",
+
+        /** Sets the activity the bot is playing.*/
+        "activityMessage": "🚀 https://github.com/shtrih/discord-xmpp-transport-bot"
     },
     "jabber": {
         "userJid": "user@jabber.org",
