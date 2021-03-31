@@ -127,7 +127,13 @@ function App() {
 
                 remDiscord.send(message.channel.id, reply);
             }
-            else if ('say' === commandName && message.author.id === config.discord.adminId) {
+            else if ('say' === commandName) {
+                if (message.author.id !== config.discord.adminId) {
+                    remDiscord.send(message.channel.id, 'You cannot use this command.');
+
+                    return;
+                }
+
                 const match = text.match(/^\s*([^\s]+)\s+(.*)/);
                 let reply = 'Can\'t recognize the command! Syntax: `<room> <message>`.',
                     replyToRoom = message.channel.id
@@ -465,10 +471,12 @@ function App() {
                 return;
             }
 
-            remDiscord.sendDM(
-                config.discord.adminId,
-                this.escapeStringTemplate`**${stanza.from}:** ${Body.getText()}`
-            ).catch(LogError);
+            if (config.discord.adminId) {
+                remDiscord.sendDM(
+                    config.discord.adminId,
+                    this.escapeStringTemplate`**${stanza.from}:** ${Body.getText()}`
+                ).catch(LogError);
+            }
         });
 
         ramXmpp.on('message:captcha', (stanza, from_jid, from_nick, Body) => {
@@ -476,10 +484,12 @@ function App() {
                 return;
             }
 
-            remDiscord.sendDM(
-                config.discord.adminId,
-                this.escapeStringTemplate`**${stanza.from}:** ${Body.getText()}`
-            ).catch(LogError);
+            if (config.discord.adminId) {
+                remDiscord.sendDM(
+                    config.discord.adminId,
+                    this.escapeStringTemplate`**${stanza.from}:** ${Body.getText()}`
+                ).catch(LogError);
+            }
         });
     };
 
