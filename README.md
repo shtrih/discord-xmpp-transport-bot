@@ -3,9 +3,14 @@ Simple transport bot between Discord channel and Jabber (XMPP MUC) conference.
 You can join several conferences on one bot instance.
 
 # How to start
- - You need a working installation of [Node.js](https://nodejs.org) (version >= 7.7.1) on the machine this bot will run on. `npm` is installed with Node.js.
+ - You need a working installation of [Node.js](https://nodejs.org) on the machine this bot will run on. `npm` is installed with Node.js.
+ - Get latest stable [release](https://github.com/shtrih/discord-xmpp-transport-bot/releases).
  - Install dependencies: `npm ci`.
- - Create configuration file: `cp config/development.cjson.sample config/development.cjson`. Create `production.cjson` for production mode (`NODE_ENV=production`).
+ - Create configuration file:
+    ```
+    cp config/development.cjson.sample config/development.cjson
+    ```
+    Create `production.cjson` for production mode (`NODE_ENV=production`).
  - Edit configuration files. See section `Adding Bot to Discord Guild` below.
  - Start application: `nodejs ./app.js` or `npm start`.
  - Type `!ping` in Discord channel to check "pong" answer.
