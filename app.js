@@ -44,16 +44,7 @@ function App() {
     ;
 
     this.run = () => {
-        remDiscord.connect()
-            .then(() => {
-                this.registerXMPPListeners();
-                ramXmpp.connect();
-            })
-            .catch((e) => {
-                LogError(e);
-                process.kill(process.pid, 'SIGTERM');
-            })
-        ;
+        let jabberInitiated = false;
 
         discord.on('ready', () => {
             LogInfo('Connected to discord as ' + discord.user.username + " - (" + discord.user.id + ")");
@@ -62,6 +53,11 @@ function App() {
                 discord.user.setActivity(config.discord.activityMessage)
                     .then(presence => LogDebug('Activity set', config.discord.activityMessage))
                     .catch(remDiscord.logError);
+            }
+            if (!jabberInitiated) {
+                jabberInitiated = true;
+                this.registerXMPPListeners();
+                ramXmpp.connect();
             }
         });
 
@@ -215,6 +211,13 @@ function App() {
         discord.on('error', (error) => {
             remDiscord.logError({clientStatus: discord.status, message: error.message})
         });
+
+        remDiscord.connect()
+            .catch((e) => {
+                LogError(e);
+                process.kill(process.pid, 'SIGTERM');
+            })
+        ;
     };
 
     this.registerXMPPListeners = () => {
