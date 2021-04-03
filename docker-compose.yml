@@ -8,6 +8,3 @@ services:
     environment:
       - NODE_ENV=production
       - DEBUG=-info,error:*,-debug:*
-    volumes:
-       - ./:/usr/src/app
-       - /usr/src/app/node_modules
